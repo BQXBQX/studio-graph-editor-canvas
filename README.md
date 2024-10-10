@@ -1,1 +1,1 @@
-# studio-graph-editor
+# studio-graph-editor-canvas
