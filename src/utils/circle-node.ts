@@ -1,49 +1,57 @@
+import { BehaviorSubject } from "rxjs";
+
 export class CircleNode {
   private gl: WebGL2RenderingContext;
-  private x: number;
-  private y: number;
-  private radius: number;
-  private color: [number, number, number, number]; // RGBA
   private vertexBuffer: WebGLBuffer | null = null;
-  private numVertices: number = 0; // 用于存储顶点数量
+  private numVertices: number = 0;
+
+  // RxJS subjects to manage updates
+  private position$: BehaviorSubject<[number, number]>;
+  private radius$: BehaviorSubject<number>;
+  private color$: BehaviorSubject<[number, number, number, number]>;
 
   constructor(
     gl: WebGL2RenderingContext,
     x: number,
     y: number,
-    radius: number,
-    color: [number, number, number, number]
+    color: [number, number, number, number],
+    radius: number = 100 // Optional radius defaulting to 30
   ) {
     this.gl = gl;
-    this.x = x;
-    this.y = y;
-    this.radius = radius;
-    this.color = color;
 
-    // 初始化缓冲区用于绘制圆形
+    // Initialize subjects for position, radius, and color
+    this.position$ = new BehaviorSubject<[number, number]>([x, y]);
+    this.radius$ = new BehaviorSubject<number>(radius);
+    this.color$ = new BehaviorSubject<[number, number, number, number]>(color);
+
+    // Initialize buffer data for the circle vertices
     this.initBuffers();
   }
 
-  // 初始化用于圆形绘制的缓冲区
+  // Initialize vertex buffers for drawing the circle
   private initBuffers(): void {
-    const numSegments = 100;
+    const numSegments = 100; // More segments for smoother circles
     const angleStep = (2 * Math.PI) / numSegments;
 
     const vertices: number[] = [];
 
-    // 添加圆心点（TRIANGLE_FAN 的起始点）
-    vertices.push(this.x, this.y);
-
-    // 添加圆周的顶点
-    for (let i = 0; i <= numSegments; i++) {
-      const angle = i * angleStep;
-      const x = Math.cos(angle) * this.radius + this.x;
-      const y = Math.sin(angle) * this.radius + this.y;
+    // Subscribe to position changes
+    this.position$.subscribe(([x, y]) => {
+      // Add the center point for TRIANGLE_FAN
       vertices.push(x, y);
-    }
 
-    this.numVertices = numSegments + 2; // 圆心 + 100段圆弧 + 闭合顶点
+      // Compute circle points based on radius
+      for (let i = 0; i <= numSegments; i++) {
+        const angle = i * angleStep;
+        const posX = Math.cos(angle) * this.radius$.getValue() + x;
+        const posY = Math.sin(angle) * this.radius$.getValue() + y;
+        vertices.push(posX, posY);
+      }
 
+      this.numVertices = numSegments + 2; // Circle center + points + close loop
+    });
+
+    // Create and bind vertex buffer
     this.vertexBuffer = this.gl.createBuffer();
     if (!this.vertexBuffer) {
       throw new Error("Failed to create buffer");
@@ -57,26 +65,27 @@ export class CircleNode {
     );
   }
 
-  // 绘制圆形
+  // Draw the circle
   public draw(program: WebGLProgram): void {
     const gl = this.gl;
 
-    // 激活着色器程序
+    // Activate the shader program
     gl.useProgram(program);
 
-    // 绑定缓冲区并启用顶点属性
+    // Bind and set up the vertex buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
     const positionLocation = gl.getAttribLocation(program, "a_position");
     gl.enableVertexAttribArray(positionLocation);
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-    // 设置颜色
+    // Set the circle color from the color stream
     const colorLocation = gl.getUniformLocation(program, "u_color");
+    const color = this.color$.getValue();
     if (colorLocation !== null) {
-      gl.uniform4fv(colorLocation, this.color);
+      gl.uniform4fv(colorLocation, color);
     }
 
-    // 绘制圆形，使用 `this.numVertices` 来确保绘制的顶点数量正确
+    // Draw the circle using TRIANGLE_FAN
     gl.drawArrays(gl.TRIANGLE_FAN, 0, this.numVertices);
   }
 }

@@ -1,82 +1,61 @@
 import { CircleNode } from "./circle-node";
-import createProgram from "./shader/createProgram";
-import createShader from "./shader/createShader";
-import fragment from "../glsl/fragment.glsl?raw";
-import vertex from "../glsl/vertex.glsl?raw";
+import { fromEvent } from "rxjs";
+import { debounceTime } from "rxjs/operators";
+import createProgram from "./shader/create-program";
+import createShader from "./shader/create-shader";
+import fragment from "../glsl/fragment-shader-source.glsl?raw";
+import vertex from "../glsl/vertex-shader-source.glsl?raw";
 
-export class graphEditor {
+export class GraphEditor {
   private canvas: HTMLCanvasElement;
-  private isDraggingCanvas = false;
-  private isDraggingNode = false;
-  private selectedNode: CircleNode | null = null;
   private gl: WebGL2RenderingContext;
   private nodes: CircleNode[] = [];
-  private width: number = 0;
-  private height: number = 0;
   private program: WebGLProgram;
 
   constructor(container: HTMLCanvasElement) {
     this.canvas = container;
 
-    const currentWebGL = this.canvas.getContext("webgl2");
-
-    if (!currentWebGL) {
-      throw new Error("not support webgl2");
+    const glContext = this.canvas.getContext("webgl2");
+    if (!glContext) {
+      throw new Error("WebGL2 is not supported");
     }
-    this.gl = currentWebGL;
+    this.gl = glContext;
 
-    this.isDraggingCanvas = false;
-    this.isDraggingNode = false;
-    this.selectedNode = null;
-
-    this.gl.clearColor(245, 245, 245, 1);
-
-    // 初始化着色器程序
+    // Initialize shaders and program
     this.program = this.initShaderProgram()!;
 
+    // Set background color and other configurations
+    this.gl.clearColor(245 / 255, 245 / 255, 245 / 255, 1);
+
+    // Add some circle nodes
+    this.nodes.push(new CircleNode(this.gl, 0, 0, [0.0, 0.0, 0.0, 1.0])); // Red circle
+    this.nodes.push(new CircleNode(this.gl, 500, 500, [0.0, 0.0, 0.0, 1.0])); // Green circle
+
+    // Initialize resize event handler using RxJS
+    fromEvent(window, "resize").subscribe(() => this.resizeCanvas());
+
+    // Resize canvas and draw the scene
     this.resizeCanvas();
-    window.addEventListener("resize", () => {
-      this.resizeCanvas();
-    });
-
-    // 添加圆形节点
-    this.nodes.push(
-      new CircleNode(this.gl, 0, 0, 20, [1.0, 0.0, 0.0, 1.0]) // 红色圆形
-    );
-    this.nodes.push(
-      new CircleNode(this.gl, 200, 200, 30, [0.0, 1.0, 0.0, 1.0]) // 绿色圆形
-    );
-
-    // 绘制场景
     this.drawScene();
   }
 
-  // 初始化着色器程序
+  // Initialize vertex and fragment shaders
   private initShaderProgram(): WebGLProgram | null {
-    const vertexShaderSource = vertex;
-    const fragmentShaderSource = fragment;
-
-    const vertexShader = createShader(
-      this.gl,
-      this.gl.VERTEX_SHADER,
-      vertexShaderSource
-    );
+    const vertexShader = createShader(this.gl, this.gl.VERTEX_SHADER, vertex);
     const fragmentShader = createShader(
       this.gl,
       this.gl.FRAGMENT_SHADER,
-      fragmentShaderSource
+      fragment
     );
 
     if (!vertexShader || !fragmentShader) {
-      throw new Error("Shader compilation error");
+      throw new Error("Failed to create shaders");
     }
 
-    const program = createProgram(this.gl, vertexShader, fragmentShader);
-
-    return program;
+    return createProgram(this.gl, vertexShader, fragmentShader);
   }
 
-  // 调整 canvas 尺寸
+  // Resize canvas to fit the window dimensions
   private resizeCanvas(): void {
     const displayWidth = this.canvas.clientWidth;
     const displayHeight = this.canvas.clientHeight;
@@ -89,16 +68,27 @@ export class graphEditor {
       this.canvas.height = displayHeight;
     }
 
+    // Update WebGL viewport
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    this.drawScene(); // 调整大小后重新绘制
+    this.drawScene();
   }
 
-  // 绘制场景
+  // Draw the scene by rendering all nodes
   public drawScene(): void {
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
-    // 绘制所有节点
-    for (let node of this.nodes) {
+    // Update resolution uniform for all nodes
+    const resolutionLocation = this.gl.getUniformLocation(
+      this.program,
+      "u_resolution"
+    );
+    this.gl.uniform2f(
+      resolutionLocation,
+      this.canvas.width,
+      this.canvas.height
+    );
+
+    for (const node of this.nodes) {
       node.draw(this.program);
     }
   }
