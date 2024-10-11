@@ -1,6 +1,7 @@
 import { BehaviorSubject } from "rxjs";
+import { Node } from "../types/node";
 
-export class CircleNode {
+export class CircleNode<T> {
   private gl: WebGL2RenderingContext;
   private vertexBuffer: WebGLBuffer | null = null;
   private numVertices: number = 0;
@@ -8,22 +9,22 @@ export class CircleNode {
   // RxJS subjects to manage updates
   private position$: BehaviorSubject<[number, number]>;
   private radius$: BehaviorSubject<number>;
-  private color$: BehaviorSubject<[number, number, number, number]>;
-
+  private backgroundColor$: BehaviorSubject<[number, number, number, number]>;
+  private data$: BehaviorSubject<T>;
   constructor(
     gl: WebGL2RenderingContext,
-    x: number,
-    y: number,
-    color: [number, number, number, number],
+    nodeProps: Node<T>,
     radius: number = 100 // Optional radius defaulting to 30
   ) {
     this.gl = gl;
 
     // Initialize subjects for position, radius, and color
-    this.position$ = new BehaviorSubject<[number, number]>([x, y]);
+    this.position$ = new BehaviorSubject<[number, number]>(nodeProps.position);
     this.radius$ = new BehaviorSubject<number>(radius);
-    this.color$ = new BehaviorSubject<[number, number, number, number]>(color);
-
+    this.backgroundColor$ = new BehaviorSubject<
+      [number, number, number, number]
+    >(nodeProps.backgroundColor ?? [0, 0, 0, 1]);
+    this.data$ = new BehaviorSubject<T>(nodeProps.data);
     // Initialize buffer data for the circle vertices
     this.initBuffers();
   }
@@ -80,7 +81,7 @@ export class CircleNode {
 
     // Set the circle color from the color stream
     const colorLocation = gl.getUniformLocation(program, "u_color");
-    const color = this.color$.getValue();
+    const color = this.backgroundColor$.getValue();
     if (colorLocation !== null) {
       gl.uniform4fv(colorLocation, color);
     }

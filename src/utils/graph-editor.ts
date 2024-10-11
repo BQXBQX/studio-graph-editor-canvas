@@ -4,17 +4,21 @@ import createProgram from "./shader/create-program";
 import createShader from "./shader/create-shader";
 import fragment from "../glsl/fragment-shader-source.glsl?raw";
 import vertex from "../glsl/vertex-shader-source.glsl?raw";
+import { Node } from "../types/node";
 
-export class GraphEditor {
+export class GraphEditor<NodeType> {
   private canvas: HTMLCanvasElement;
   private gl: WebGL2RenderingContext;
   private program: WebGLProgram;
 
   // BehaviorSubjects for size and nodes
   private canvasSize$ = new BehaviorSubject<[number, number]>([0, 0]);
-  private nodes$ = new BehaviorSubject<CircleNode[]>([]);
+  private nodes$ = new BehaviorSubject<CircleNode<NodeType>[]>([]);
 
-  constructor(container: HTMLCanvasElement) {
+  constructor(
+    container: HTMLCanvasElement,
+    defaultNodes?: Node<NodeType>[]
+  ) {
     this.canvas = container;
 
     const glContext = this.canvas.getContext("webgl2");
@@ -30,10 +34,11 @@ export class GraphEditor {
     this.gl.clearColor(245 / 255, 245 / 255, 245 / 255, 1);
 
     // Add some circle nodes
-    this.nodes$.next([
-      new CircleNode(this.gl, 100, 100, [0.0, 0.0, 0.0, 1.0]),
-      new CircleNode(this.gl, 500, 500, [0.0, 0.0, 0.0, 1.0]),
-    ]);
+    this.nodes$.next(
+      (defaultNodes ?? []).map(
+        (defaultNode) => new CircleNode(this.gl, defaultNode)
+      )
+    );
 
     // Initialize resize event handler using RxJS
     fromEvent(window, "resize").subscribe(() => this.resizeCanvas());
@@ -78,26 +83,23 @@ export class GraphEditor {
     }
 
     // Update WebGL viewport
-    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-
-    // Update canvas size
-    this.canvasSize$.next([this.canvas.width, this.canvas.height]);
-  }
-
-  // Draw the scene by rendering all nodes
-  private drawScene(): void {
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+    this.gl.viewport(0, 0, displayWidth, displayHeight);
 
     // Update resolution uniform for all nodes
     const resolutionLocation = this.gl.getUniformLocation(
       this.program,
       "u_resolution"
     );
-    this.gl.uniform2f(
-      resolutionLocation,
-      this.canvas.width,
-      this.canvas.height
-    );
+    this.gl.uniform2f(resolutionLocation, displayWidth, displayHeight);
+
+    // Update canvas size
+    this.canvasSize$.next([displayWidth, displayHeight]);
+  }
+
+  // private transformNodeToCir
+  // Draw the scene by rendering all nodes
+  private drawScene(): void {
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
     // Get the current nodes and draw them
     const nodes = this.nodes$.getValue();
