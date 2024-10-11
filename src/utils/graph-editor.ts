@@ -1,6 +1,5 @@
 import { CircleNode } from "./circle-node";
-import { fromEvent } from "rxjs";
-import { debounceTime } from "rxjs/operators";
+import { BehaviorSubject, combineLatest, fromEvent } from "rxjs";
 import createProgram from "./shader/create-program";
 import createShader from "./shader/create-shader";
 import fragment from "../glsl/fragment-shader-source.glsl?raw";
@@ -9,8 +8,11 @@ import vertex from "../glsl/vertex-shader-source.glsl?raw";
 export class GraphEditor {
   private canvas: HTMLCanvasElement;
   private gl: WebGL2RenderingContext;
-  private nodes: CircleNode[] = [];
   private program: WebGLProgram;
+
+  // BehaviorSubjects for size and nodes
+  private canvasSize$ = new BehaviorSubject<[number, number]>([0, 0]);
+  private nodes$ = new BehaviorSubject<CircleNode[]>([]);
 
   constructor(container: HTMLCanvasElement) {
     this.canvas = container;
@@ -28,11 +30,18 @@ export class GraphEditor {
     this.gl.clearColor(245 / 255, 245 / 255, 245 / 255, 1);
 
     // Add some circle nodes
-    this.nodes.push(new CircleNode(this.gl, 0, 0, [0.0, 0.0, 0.0, 1.0])); // Red circle
-    this.nodes.push(new CircleNode(this.gl, 500, 500, [0.0, 0.0, 0.0, 1.0])); // Green circle
+    this.nodes$.next([
+      new CircleNode(this.gl, 100, 100, [0.0, 0.0, 0.0, 1.0]),
+      new CircleNode(this.gl, 500, 500, [0.0, 0.0, 0.0, 1.0]),
+    ]);
 
     // Initialize resize event handler using RxJS
     fromEvent(window, "resize").subscribe(() => this.resizeCanvas());
+
+    // Combine latest canvas size and nodes to trigger drawScene
+    combineLatest([this.canvasSize$, this.nodes$]).subscribe(() => {
+      this.drawScene();
+    });
 
     // Resize canvas and draw the scene
     this.resizeCanvas();
@@ -55,7 +64,7 @@ export class GraphEditor {
     return createProgram(this.gl, vertexShader, fragmentShader);
   }
 
-  // Resize canvas to fit the window dimensions
+  // Resize canvas to fit the window dimensions and update BehaviorSubject
   private resizeCanvas(): void {
     const displayWidth = this.canvas.clientWidth;
     const displayHeight = this.canvas.clientHeight;
@@ -70,11 +79,13 @@ export class GraphEditor {
 
     // Update WebGL viewport
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    this.drawScene();
+
+    // Update canvas size
+    this.canvasSize$.next([this.canvas.width, this.canvas.height]);
   }
 
   // Draw the scene by rendering all nodes
-  public drawScene(): void {
+  private drawScene(): void {
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
     // Update resolution uniform for all nodes
@@ -88,7 +99,9 @@ export class GraphEditor {
       this.canvas.height
     );
 
-    for (const node of this.nodes) {
+    // Get the current nodes and draw them
+    const nodes = this.nodes$.getValue();
+    for (const node of nodes) {
       node.draw(this.program);
     }
   }
