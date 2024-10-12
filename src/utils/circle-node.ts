@@ -12,7 +12,7 @@ export class CircleNode<T> {
   // RxJS subjects to manage updates
   private position$: BehaviorSubject<[number, number]>;
   private offset$: BehaviorSubject<[number, number]> = new BehaviorSubject([
-    100, 100,
+    0, 0,
   ]);
   private radius$: BehaviorSubject<number>;
   private backgroundColor$: BehaviorSubject<[number, number, number, number]>;
@@ -20,6 +20,7 @@ export class CircleNode<T> {
   private borderWidth$: BehaviorSubject<number>;
   private data$: BehaviorSubject<T>;
   private textLabel: TextLabel;
+  // private program: WebGLProgram;
 
   constructor(
     gl: WebGL2RenderingContext,
@@ -53,13 +54,13 @@ export class CircleNode<T> {
     });
 
     this.offset$.subscribe(() => {
-      this.initBuffers(); // Recalculate buffers when offset changes
+      this.updateBuffers(); // Recalculate buffers when offset changes
     });
 
-    this.initBuffers();
+    this.updateBuffers();
   }
 
-  private initBuffers(): void {
+  private updateBuffers(): void {
     const numSegments = 100;
     const angleStep = (2 * Math.PI) / numSegments;
 

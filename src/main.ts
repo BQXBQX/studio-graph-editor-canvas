@@ -4,7 +4,6 @@ import { GraphEditor } from "./utils/graph-editor";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <canvas id="canvas"></canvas>
-  <button>Add Node</button>
 `;
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -25,4 +24,3 @@ const defaultNodes: Node<NodeProps>[] = [
 ];
 
 new GraphEditor<NodeProps>(canvas, defaultNodes);
-const button = document.querySelector("button");

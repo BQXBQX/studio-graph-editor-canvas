@@ -125,7 +125,6 @@ export class GraphEditor<NodeType> {
   private addDragHandlers(): void {
     // Mouse down event to start dragging
     this.canvas.addEventListener("mousedown", (event) => {
-      console.log("Mouse down");
       this.isDragging = true;
       this.lastMousePosition = [event.clientX, event.clientY];
     });
