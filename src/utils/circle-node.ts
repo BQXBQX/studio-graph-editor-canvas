@@ -4,37 +4,51 @@ import { Node } from "../types/node";
 export class CircleNode<T> {
   private gl: WebGL2RenderingContext;
   private vertexBuffer: WebGLBuffer | null = null;
+  private borderBuffer: WebGLBuffer | null = null;
   private numVertices: number = 0;
+  private numBorderVertices: number = 0;
 
   // RxJS subjects to manage updates
   private position$: BehaviorSubject<[number, number]>;
   private radius$: BehaviorSubject<number>;
   private backgroundColor$: BehaviorSubject<[number, number, number, number]>;
+  private borderColor$: BehaviorSubject<[number, number, number, number]>;
+  private borderWidth$: BehaviorSubject<number>;
   private data$: BehaviorSubject<T>;
+
   constructor(
     gl: WebGL2RenderingContext,
     nodeProps: Node<T>,
-    radius: number = 100 // Optional radius defaulting to 30
+    radius: number = 100, // Optional radius defaulting to 100
+
+    borderColor: [number, number, number, number] = [0, 0, 0, 1], // 默认白色边框
+    borderWidth: number = 10 // 默认边框宽度
   ) {
     this.gl = gl;
 
-    // Initialize subjects for position, radius, and color
+    // Initialize subjects for position, radius, color, border color, and width
     this.position$ = new BehaviorSubject<[number, number]>(nodeProps.position);
     this.radius$ = new BehaviorSubject<number>(radius);
     this.backgroundColor$ = new BehaviorSubject<
       [number, number, number, number]
-    >(nodeProps.backgroundColor ?? [0, 0, 0, 1]);
+    >(nodeProps.backgroundColor ?? [1, 1, 1, 1]);
+    this.borderColor$ = new BehaviorSubject<[number, number, number, number]>(
+      borderColor
+    );
+    this.borderWidth$ = new BehaviorSubject<number>(borderWidth);
     this.data$ = new BehaviorSubject<T>(nodeProps.data);
+
     // Initialize buffer data for the circle vertices
     this.initBuffers();
   }
 
-  // Initialize vertex buffers for drawing the circle
+  // Initialize vertex buffers for drawing the circle and border
   private initBuffers(): void {
     const numSegments = 100; // More segments for smoother circles
     const angleStep = (2 * Math.PI) / numSegments;
 
     const vertices: number[] = [];
+    const borderVertices: number[] = [];
 
     // Subscribe to position changes
     this.position$.subscribe(([x, y]) => {
@@ -50,6 +64,19 @@ export class CircleNode<T> {
       }
 
       this.numVertices = numSegments + 2; // Circle center + points + close loop
+
+      // Compute border points based on radius + border width
+      borderVertices.push(x, y);
+      const borderRadius =
+        this.radius$.getValue() + this.borderWidth$.getValue();
+      for (let i = 0; i <= numSegments; i++) {
+        const angle = i * angleStep;
+        const posX = Math.cos(angle) * borderRadius + x;
+        const posY = Math.sin(angle) * borderRadius + y;
+        borderVertices.push(posX, posY);
+      }
+
+      this.numBorderVertices = numSegments + 2; // Close loop
     });
 
     // Create and bind vertex buffer
@@ -64,19 +91,48 @@ export class CircleNode<T> {
       new Float32Array(vertices),
       this.gl.STATIC_DRAW
     );
+
+    // Create and bind border buffer
+    this.borderBuffer = this.gl.createBuffer();
+    if (!this.borderBuffer) {
+      throw new Error("Failed to create border buffer");
+    }
+
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.borderBuffer);
+    this.gl.bufferData(
+      this.gl.ARRAY_BUFFER,
+      new Float32Array(borderVertices),
+      this.gl.STATIC_DRAW
+    );
   }
 
-  // Draw the circle
+  // Draw the circle and border
   public draw(program: WebGLProgram): void {
     const gl = this.gl;
 
     // Activate the shader program
     gl.useProgram(program);
 
-    // Bind and set up the vertex buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
     const positionLocation = gl.getAttribLocation(program, "a_position");
     gl.enableVertexAttribArray(positionLocation);
+
+    // first draw border, then draw the circle on the border
+    // Bind and set up the border buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.borderBuffer);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    // Set the border color from the color stream
+    const borderColorLocation = gl.getUniformLocation(program, "u_color");
+    const borderColor = this.borderColor$.getValue();
+    if (borderColorLocation !== null) {
+      gl.uniform4fv(borderColorLocation, borderColor);
+    }
+
+    // Draw the border using LINE_LOOP
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, this.numBorderVertices);
+
+    // Bind and set up the vertex buffer for the circle
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
     // Set the circle color from the color stream
