@@ -1,4 +1,4 @@
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, combineLatest } from "rxjs";
 import { Node } from "../types/node";
 import { TextLabel } from "./text-label";
 
@@ -46,18 +46,20 @@ export class CircleNode<T> {
     this.textLabel = new TextLabel(
       nodeProps.label ?? "",
       nodeProps.position[0],
-      nodeProps.position[1]
+      nodeProps.position[1],
+      0,
+      0
     );
 
-    this.position$.subscribe(([x, y]) => {
-      this.textLabel.setPosition(x, y);
+    combineLatest([this.offset$, this.position$]).subscribe(() => {
+      this.updateBuffers();
+      this.textLabel.setPosition(
+        this.position$.getValue()[0],
+        this.position$.getValue()[1],
+        this.offset$.getValue()[0],
+        this.offset$.getValue()[1]
+      );
     });
-
-    this.offset$.subscribe(() => {
-      this.updateBuffers(); // Recalculate buffers when offset changes
-    });
-
-    this.updateBuffers();
   }
 
   private updateBuffers(): void {

@@ -45,17 +45,11 @@ export class GraphEditor<NodeType> {
     fromEvent(window, "resize").subscribe(() => this.resizeCanvas());
 
     // Combine latest canvas size and nodes to trigger drawScene
-    combineLatest([this.canvasSize$, this.nodes$]).subscribe(() => {
-      this.drawScene();
-    });
-
-    this.canvasOffset$.subscribe(() => {
-      this.nodes$.getValue().forEach((node) => {
-        node.setOffset(
-          this.canvasOffset$.getValue()[0],
-          this.canvasOffset$.getValue()[1]
-        );
-      });
+    combineLatest([
+      this.canvasSize$,
+      this.nodes$,
+      this.canvasOffset$,
+    ]).subscribe(() => {
       this.drawScene();
     });
 
@@ -63,7 +57,6 @@ export class GraphEditor<NodeType> {
 
     // Resize canvas and draw the scene
     this.resizeCanvas();
-    this.drawScene();
   }
 
   // Initialize vertex and fragment shaders
@@ -136,10 +129,14 @@ export class GraphEditor<NodeType> {
         const deltaX = event.clientX - lastX;
         const deltaY = event.clientY - lastY;
 
-        this.canvasOffset$.next([
-          this.canvasOffset$.getValue()[0] + deltaX,
-          this.canvasOffset$.getValue()[1] + deltaY,
-        ]);
+        const newOffsetX = this.canvasOffset$.getValue()[0] + deltaX;
+        const newOffsetY = this.canvasOffset$.getValue()[1] + deltaY;
+
+        this.nodes$.getValue().forEach((node) => {
+          node.setOffset(newOffsetX, newOffsetY);
+        });
+
+        this.canvasOffset$.next([newOffsetX, newOffsetY]);
 
         // Update last mouse position
         this.lastMousePosition = [event.clientX, event.clientY];
