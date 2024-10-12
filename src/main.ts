@@ -14,10 +14,12 @@ const defaultNodes: Node<NodeProps>[] = [
   {
     position: [100, 100],
     data: {},
+    label: "Liming",
   },
   {
     position: [500, 500],
     data: {},
+    label: "lihong",
   },
 ];
 

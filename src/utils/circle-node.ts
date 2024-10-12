@@ -1,5 +1,6 @@
 import { BehaviorSubject } from "rxjs";
 import { Node } from "../types/node";
+import { TextLabel } from "./text-label";
 
 export class CircleNode<T> {
   private gl: WebGL2RenderingContext;
@@ -15,6 +16,7 @@ export class CircleNode<T> {
   private borderColor$: BehaviorSubject<[number, number, number, number]>;
   private borderWidth$: BehaviorSubject<number>;
   private data$: BehaviorSubject<T>;
+  private textLabel: TextLabel;
 
   constructor(
     gl: WebGL2RenderingContext,
@@ -37,6 +39,17 @@ export class CircleNode<T> {
     );
     this.borderWidth$ = new BehaviorSubject<number>(borderWidth);
     this.data$ = new BehaviorSubject<T>(nodeProps.data);
+
+    this.textLabel = new TextLabel(
+      nodeProps.label ?? "",
+      nodeProps.position[0],
+      nodeProps.position[1]
+    );
+
+    // Subscribe to position changes to update the label's position
+    this.position$.subscribe(([x, y]) => {
+      this.textLabel.setPosition(x, y);
+    });
 
     // Initialize buffer data for the circle vertices
     this.initBuffers();
