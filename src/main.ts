@@ -12,14 +12,14 @@ interface NodeProps {}
 
 const defaultNodes: Node<NodeProps>[] = [
   {
-    position: [100, 100],
+    position: [200, 300],
     data: {},
-    label: "Liming",
+    label: "Ming Li",
   },
   {
-    position: [500, 500],
+    position: [800, 200],
     data: {},
-    label: "lihong",
+    label: "Hong Li",
   },
 ];
 

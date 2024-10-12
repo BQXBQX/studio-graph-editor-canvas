@@ -11,6 +11,7 @@ export class CircleNode<T> {
 
   // RxJS subjects to manage updates
   private position$: BehaviorSubject<[number, number]>;
+  private offset$: BehaviorSubject<[number, number]>;
   private radius$: BehaviorSubject<number>;
   private backgroundColor$: BehaviorSubject<[number, number, number, number]>;
   private borderColor$: BehaviorSubject<[number, number, number, number]>;
@@ -21,15 +22,15 @@ export class CircleNode<T> {
   constructor(
     gl: WebGL2RenderingContext,
     nodeProps: Node<T>,
-    radius: number = 100, // Optional radius defaulting to 100
-
-    borderColor: [number, number, number, number] = [0, 0, 0, 1], // 默认白色边框
-    borderWidth: number = 10 // 默认边框宽度
+    radius: number = 80, // Optional radius defaulting to 100
+    borderColor: [number, number, number, number] = [0, 0, 0, 1], // Default black border
+    borderWidth: number = 6 // Default border width
   ) {
     this.gl = gl;
 
     // Initialize subjects for position, radius, color, border color, and width
     this.position$ = new BehaviorSubject<[number, number]>(nodeProps.position);
+    this.offset$ = new BehaviorSubject<[number, number]>([0, 0]); // Initialize offset
     this.radius$ = new BehaviorSubject<number>(radius);
     this.backgroundColor$ = new BehaviorSubject<
       [number, number, number, number]
@@ -63,29 +64,33 @@ export class CircleNode<T> {
     const vertices: number[] = [];
     const borderVertices: number[] = [];
 
-    // Subscribe to position changes
+    // Subscribe to position changes and calculate vertices
     this.position$.subscribe(([x, y]) => {
+      const [offsetX, offsetY] = this.offset$.getValue(); // Get current offset
+
       // Add the center point for TRIANGLE_FAN
-      vertices.push(x, y);
+      vertices.push(x + offsetX, y + offsetY); // Apply offset
 
       // Compute circle points based on radius
       for (let i = 0; i <= numSegments; i++) {
         const angle = i * angleStep;
-        const posX = Math.cos(angle) * this.radius$.getValue() + x;
-        const posY = Math.sin(angle) * this.radius$.getValue() + y;
+        const posX = Math.cos(angle) * this.radius$.getValue() + x + offsetX; // Apply offset
+        const posY = Math.sin(angle) * this.radius$.getValue() + y + offsetY; // Apply offset
         vertices.push(posX, posY);
       }
+
+      console.log("center", x + offsetX, y + offsetY);
 
       this.numVertices = numSegments + 2; // Circle center + points + close loop
 
       // Compute border points based on radius + border width
-      borderVertices.push(x, y);
+      borderVertices.push(x + offsetX, y + offsetY); // Apply offset
       const borderRadius =
         this.radius$.getValue() + this.borderWidth$.getValue();
       for (let i = 0; i <= numSegments; i++) {
         const angle = i * angleStep;
-        const posX = Math.cos(angle) * borderRadius + x;
-        const posY = Math.sin(angle) * borderRadius + y;
+        const posX = Math.cos(angle) * borderRadius + x + offsetX; // Apply offset
+        const posY = Math.sin(angle) * borderRadius + y + offsetY; // Apply offset
         borderVertices.push(posX, posY);
       }
 
@@ -123,6 +128,7 @@ export class CircleNode<T> {
   public draw(program: WebGLProgram): void {
     const gl = this.gl;
 
+    console.log("drawing circle", this.offset$.getValue());
     // Activate the shader program
     gl.useProgram(program);
 
@@ -157,5 +163,10 @@ export class CircleNode<T> {
 
     // Draw the circle using TRIANGLE_FAN
     gl.drawArrays(gl.TRIANGLE_FAN, 0, this.numVertices);
+  }
+
+  // Method to update the offset
+  public setOffset(offsetX: number, offsetY: number): void {
+    this.offset$.next([offsetX, offsetY]);
   }
 }

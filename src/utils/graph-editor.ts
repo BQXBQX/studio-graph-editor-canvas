@@ -15,10 +15,11 @@ export class GraphEditor<NodeType> {
   private canvasSize$ = new BehaviorSubject<[number, number]>([0, 0]);
   private nodes$ = new BehaviorSubject<CircleNode<NodeType>[]>([]);
 
-  constructor(
-    container: HTMLCanvasElement,
-    defaultNodes?: Node<NodeType>[]
-  ) {
+  private isDragging = false;
+  private lastMousePosition: [number, number] = [0, 0];
+  private canvasOffset$ = new BehaviorSubject<[number, number]>([0, 0]);
+
+  constructor(container: HTMLCanvasElement, defaultNodes?: Node<NodeType>[]) {
     this.canvas = container;
 
     const glContext = this.canvas.getContext("webgl2");
@@ -47,6 +48,18 @@ export class GraphEditor<NodeType> {
     combineLatest([this.canvasSize$, this.nodes$]).subscribe(() => {
       this.drawScene();
     });
+
+    this.canvasOffset$.subscribe(() => {
+      this.nodes$.getValue().forEach((node) => {
+        node.setOffset(
+          this.canvasOffset$.getValue()[0],
+          this.canvasOffset$.getValue()[1]
+        );
+      });
+      this.drawScene();
+    });
+
+    this.addDragHandlers();
 
     // Resize canvas and draw the scene
     this.resizeCanvas();
@@ -106,5 +119,42 @@ export class GraphEditor<NodeType> {
     for (const node of nodes) {
       node.draw(this.program);
     }
+  }
+
+  // Adding mouse event handlers
+  private addDragHandlers(): void {
+    // Mouse down event to start dragging
+    this.canvas.addEventListener("mousedown", (event) => {
+      console.log("Mouse down");
+      this.isDragging = true;
+      this.lastMousePosition = [event.clientX, event.clientY];
+    });
+
+    // Mouse move event to update canvas position while dragging
+    this.canvas.addEventListener("mousemove", (event) => {
+      if (this.isDragging) {
+        const [lastX, lastY] = this.lastMousePosition;
+        const deltaX = event.clientX - lastX;
+        const deltaY = event.clientY - lastY;
+
+        this.canvasOffset$.next([
+          this.canvasOffset$.getValue()[0] + deltaX,
+          this.canvasOffset$.getValue()[1] + deltaY,
+        ]);
+
+        // Update last mouse position
+        this.lastMousePosition = [event.clientX, event.clientY];
+      }
+    });
+
+    // Mouse up event to stop dragging
+    this.canvas.addEventListener("mouseup", () => {
+      this.isDragging = false;
+    });
+
+    // Optional: stop dragging when mouse leaves the canvas
+    this.canvas.addEventListener("mouseleave", () => {
+      this.isDragging = false;
+    });
   }
 }
