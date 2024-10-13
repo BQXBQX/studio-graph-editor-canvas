@@ -20,6 +20,9 @@ export class CircleNode<T> {
   private borderWidth$: BehaviorSubject<number>;
   private data$: BehaviorSubject<T>;
   private textLabel: TextLabel;
+
+  public isDragging: boolean = false;
+  private dragStartOffset: [number, number] = [0, 0];
   // private program: WebGLProgram;
 
   constructor(
@@ -146,5 +149,36 @@ export class CircleNode<T> {
 
   public setOffset(offsetX: number, offsetY: number): void {
     this.offset$.next([offsetX, offsetY]);
+  }
+
+  public setPosition(x: number, y: number): void {
+    this.position$.next([x, y]);
+  }
+
+  public startDragging(mouseX: number, mouseY: number): void {
+    this.isDragging = true;
+    const [nodeX, nodeY] = this.position$.getValue();
+    this.dragStartOffset = [mouseX - nodeX, mouseY - nodeY];
+  }
+
+  public stopDragging(): void {
+    this.isDragging = false;
+  }
+
+  public updatePosition(mouseX: number, mouseY: number): void {
+    if (this.isDragging) {
+      const [offsetX, offsetY] = this.dragStartOffset;
+      this.position$.next([mouseX - offsetX, mouseY - offsetY]);
+    }
+  }
+
+  public isMouseOver(mouseX: number, mouseY: number): boolean {
+    const [nodeX, nodeY] = this.position$.getValue();
+    const radius = this.radius$.getValue();
+    const [offsetX, offsetY] = this.offset$.getValue();
+    const distance = Math.sqrt(
+      (mouseX - nodeX - offsetX) ** 2 + (mouseY - nodeY - offsetY) ** 2
+    );
+    return distance <= radius;
   }
 }

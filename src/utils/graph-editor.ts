@@ -118,39 +118,70 @@ export class GraphEditor<NodeType> {
   private addDragHandlers(): void {
     // Mouse down event to start dragging
     this.canvas.addEventListener("mousedown", (event) => {
-      this.isDragging = true;
-      this.lastMousePosition = [event.clientX, event.clientY];
+      const mouseX = event.clientX - this.canvas.offsetLeft;
+      const mouseY = event.clientY - this.canvas.offsetTop;
+
+      let clickedNode: CircleNode<NodeType> | null = null;
+
+      this.nodes$.getValue().forEach((node) => {
+        if (node.isMouseOver(mouseX, mouseY)) {
+          clickedNode = node;
+        }
+      });
+
+      if (clickedNode) {
+        (clickedNode as CircleNode<NodeType>).startDragging(mouseX, mouseY);
+      } else {
+        this.isDragging = true;
+        this.lastMousePosition = [event.clientX, event.clientY];
+      }
     });
 
     // Mouse move event to update canvas position while dragging
     this.canvas.addEventListener("mousemove", (event) => {
-      if (this.isDragging) {
-        const [lastX, lastY] = this.lastMousePosition;
-        const deltaX = event.clientX - lastX;
-        const deltaY = event.clientY - lastY;
+      const mouseX = event.clientX - this.canvas.offsetLeft;
+      const mouseY = event.clientY - this.canvas.offsetTop;
 
-        const newOffsetX = this.canvasOffset$.getValue()[0] + deltaX;
-        const newOffsetY = this.canvasOffset$.getValue()[1] + deltaY;
+      let isNodeDragging = false;
 
-        this.nodes$.getValue().forEach((node) => {
-          node.setOffset(newOffsetX, newOffsetY);
-        });
+      this.nodes$.getValue().forEach((node) => {
+        if (node.isDragging) {
+          node.updatePosition(mouseX, mouseY);
+          this.drawScene();
+        }
+      });
 
-        this.canvasOffset$.next([newOffsetX, newOffsetY]);
+      if (!isNodeDragging && this.isDragging) {
+        if (this.isDragging) {
+          const [lastX, lastY] = this.lastMousePosition;
+          const deltaX = event.clientX - lastX;
+          const deltaY = event.clientY - lastY;
 
-        // Update last mouse position
-        this.lastMousePosition = [event.clientX, event.clientY];
+          const newOffsetX = this.canvasOffset$.getValue()[0] + deltaX;
+          const newOffsetY = this.canvasOffset$.getValue()[1] + deltaY;
+
+          this.nodes$.getValue().forEach((node) => {
+            node.setOffset(newOffsetX, newOffsetY);
+          });
+
+          this.canvasOffset$.next([newOffsetX, newOffsetY]);
+
+          // Update last mouse position
+          this.lastMousePosition = [event.clientX, event.clientY];
+        }
       }
     });
 
     // Mouse up event to stop dragging
     this.canvas.addEventListener("mouseup", () => {
       this.isDragging = false;
+      this.nodes$.getValue().forEach((node) => node.stopDragging());
     });
 
     // Optional: stop dragging when mouse leaves the canvas
     this.canvas.addEventListener("mouseleave", () => {
       this.isDragging = false;
+      this.nodes$.getValue().forEach((node) => node.stopDragging());
     });
   }
 }

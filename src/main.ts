@@ -36,11 +36,6 @@ const defaultNodes: Node<NodeProps>[] = [
     data: {},
     label: "Hong Li",
   },
-  {
-    position: [100, 1000],
-    data: {},
-    label: "Hong Li",
-  },
 ];
 
 new GraphEditor<NodeProps>(canvas, defaultNodes);
