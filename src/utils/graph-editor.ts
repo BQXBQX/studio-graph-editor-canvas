@@ -121,6 +121,11 @@ export class GraphEditor<NodeType> {
       const mouseX = event.clientX - this.canvas.offsetLeft;
       const mouseY = event.clientY - this.canvas.offsetTop;
 
+      console.log(
+        event.clientX - this.canvasOffset$.getValue()[0],
+        event.clientY - this.canvasOffset$.getValue()[1]
+      );
+
       let clickedNode: CircleNode<NodeType> | null = null;
 
       this.nodes$.getValue().forEach((node) => {
@@ -129,6 +134,7 @@ export class GraphEditor<NodeType> {
         }
       });
 
+      console.log(clickedNode);
       if (clickedNode) {
         (clickedNode as CircleNode<NodeType>).startDragging(mouseX, mouseY);
       } else {

@@ -23,6 +23,8 @@ export class CircleNode<T> {
 
   public isDragging: boolean = false;
   private dragStartOffset: [number, number] = [0, 0];
+  private scale: number = 0.5; // 硬编码缩放因子为 0.7
+
   // private program: WebGLProgram;
 
   constructor(
@@ -54,15 +56,43 @@ export class CircleNode<T> {
       0
     );
 
-    combineLatest([this.offset$, this.position$]).subscribe(() => {
-      this.updateBuffers();
-      this.textLabel.setPosition(
-        this.position$.getValue()[0],
-        this.position$.getValue()[1],
-        this.offset$.getValue()[0],
-        this.offset$.getValue()[1]
-      );
-    });
+    combineLatest([this.offset$, this.position$, this.radius$]).subscribe(
+      () => {
+        this.updateBuffers();
+        this.textLabel.setPosition(
+          this.position$.getValue()[0],
+          this.position$.getValue()[1],
+          this.offset$.getValue()[0],
+          this.offset$.getValue()[1]
+        );
+      }
+    );
+
+    this.setScale();
+  }
+
+  private setScale(): void {
+    // 更新位置和偏移量
+    const currentPosition = this.position$.getValue();
+    this.position$.next([
+      currentPosition[0] * this.scale,
+      currentPosition[1] * this.scale,
+    ]);
+
+    console.log(
+      "position",
+      currentPosition[0] * this.scale,
+      currentPosition[1] * this.scale
+    );
+
+    const currentOffset = this.offset$.getValue();
+    this.offset$.next([
+      currentOffset[0] * this.scale,
+      currentOffset[1] * this.scale,
+    ]);
+
+    const currentRadius = this.radius$.getValue();
+    this.radius$.next(currentRadius * this.scale);
   }
 
   private updateBuffers(): void {

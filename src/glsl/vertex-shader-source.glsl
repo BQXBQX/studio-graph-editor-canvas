@@ -5,6 +5,8 @@ void main(){
     vec2 zeroToTwo=zeroToOne*2.;
     vec2 clipSpace=zeroToTwo-1.;
     
+    // clipSpace*=.7;
+    
     // 设置最终顶点位置
     gl_Position=vec4(clipSpace*vec2(1,-1),0,1);
 }
