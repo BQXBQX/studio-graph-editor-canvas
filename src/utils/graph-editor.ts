@@ -22,7 +22,9 @@ export class GraphEditor<NodeType> {
   constructor(container: HTMLCanvasElement, defaultNodes?: Node<NodeType>[]) {
     this.canvas = container;
 
-    const glContext = this.canvas.getContext("webgl2");
+    const glContext = this.canvas.getContext("webgl2", {
+      preserveDrawingBuffer: true,
+    });
     if (!glContext) {
       throw new Error("WebGL2 is not supported");
     }

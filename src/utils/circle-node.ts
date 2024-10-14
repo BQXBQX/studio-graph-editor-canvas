@@ -23,7 +23,7 @@ export class CircleNode<T> {
 
   public isDragging: boolean = false;
   private dragStartOffset: [number, number] = [0, 0];
-  private scale: number = 0.5; // 硬编码缩放因子为 0.7
+  private scale: number = 1; // 硬编码缩放因子为 0.7
 
   // private program: WebGLProgram;
 

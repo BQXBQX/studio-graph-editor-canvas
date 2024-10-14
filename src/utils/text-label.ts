@@ -16,6 +16,7 @@ export class TextLabel {
     this.element.style.color = "black";
     this.element.style.transform = "translate(-50%, -50%)";
     this.element.style.fontFamily = "monospace";
+    this.element.style.pointerEvents = "none";
     this.setPosition(x, y, offsetX, offsetY);
 
     // Append the label to the body (or another container)
