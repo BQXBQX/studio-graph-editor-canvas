@@ -123,10 +123,7 @@ export class GraphEditor<NodeType> {
       const mouseX = event.clientX - this.canvas.offsetLeft;
       const mouseY = event.clientY - this.canvas.offsetTop;
 
-      console.log(
-        event.clientX - this.canvasOffset$.getValue()[0],
-        event.clientY - this.canvasOffset$.getValue()[1]
-      );
+      this.canvas.style.cursor = "grab";
 
       let clickedNode: CircleNode<NodeType> | null = null;
 
@@ -184,12 +181,14 @@ export class GraphEditor<NodeType> {
     this.canvas.addEventListener("mouseup", () => {
       this.isDragging = false;
       this.nodes$.getValue().forEach((node) => node.stopDragging());
+      this.canvas.style.cursor = "unset";
     });
 
     // Optional: stop dragging when mouse leaves the canvas
     this.canvas.addEventListener("mouseleave", () => {
       this.isDragging = false;
       this.nodes$.getValue().forEach((node) => node.stopDragging());
+      this.canvas.style.cursor = "unset";
     });
   }
 }
