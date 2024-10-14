@@ -8,6 +8,7 @@ export class CircleNode<T> {
   private borderBuffer: WebGLBuffer | null = null;
   private numVertices: number = 0;
   private numBorderVertices: number = 0;
+  public isSelect: boolean = false;
 
   // RxJS subjects to manage updates
   private position$: BehaviorSubject<[number, number]>;
@@ -59,6 +60,11 @@ export class CircleNode<T> {
       0,
       canvas
     );
+
+    this.borderColor$.subscribe(() => {
+      console.log(this.borderColor$.getValue());
+      this.updateBuffers();
+    });
 
     combineLatest([this.offset$, this.position$, this.radius$]).subscribe(
       () => {
@@ -214,5 +220,13 @@ export class CircleNode<T> {
       (mouseX - nodeX - offsetX) ** 2 + (mouseY - nodeY - offsetY) ** 2
     );
     return distance <= radius;
+  }
+
+  public setSelect(isSelect: boolean) {
+    if (isSelect !== this.isSelect) {
+      this.isSelect = isSelect;
+      isSelect && this.borderColor$.next([25 / 255, 120 / 255, 255 / 255, 1]);
+      !isSelect && this.borderColor$.next([0, 0, 0, 1]);
+    }
   }
 }

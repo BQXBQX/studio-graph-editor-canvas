@@ -124,15 +124,18 @@ export class GraphEditor<NodeType> {
       const mouseX = event.clientX - this.canvas.offsetLeft;
       const mouseY = event.clientY - this.canvas.offsetTop;
 
-      this.canvas.style.cursor = "grab";
-
       let clickedNode: CircleNode<NodeType> | null = null;
 
       this.nodes$.getValue().forEach((node) => {
+        node.setSelect(false);
         if (node.isMouseOver(mouseX, mouseY)) {
           clickedNode = node;
+          clickedNode.setSelect(true);
         }
       });
+
+      // TODO: Here we can optimize the number of data update
+      this.drawScene();
 
       console.log(clickedNode);
       if (clickedNode) {
@@ -154,11 +157,15 @@ export class GraphEditor<NodeType> {
         if (node.isDragging) {
           node.updatePosition(mouseX, mouseY);
           this.drawScene();
+
+          this.canvas.style.cursor = "grab";
         }
       });
 
       if (!isNodeDragging && this.isDragging) {
         if (this.isDragging) {
+          this.canvas.style.cursor = "grab";
+
           const [lastX, lastY] = this.lastMousePosition;
           const deltaX = event.clientX - lastX;
           const deltaY = event.clientY - lastY;
