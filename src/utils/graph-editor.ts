@@ -5,6 +5,7 @@ import createShader from "./shader/create-shader";
 import fragment from "../glsl/fragment-shader-source.glsl?raw";
 import vertex from "../glsl/vertex-shader-source.glsl?raw";
 import { Node } from "../types/node";
+import { ControlPanel } from "./control-panel";
 
 export class GraphEditor<NodeType> {
   private canvas: HTMLCanvasElement;
@@ -18,6 +19,7 @@ export class GraphEditor<NodeType> {
   private isDragging = false;
   private lastMousePosition: [number, number] = [0, 0];
   private canvasOffset$ = new BehaviorSubject<[number, number]>([0, 0]);
+  private controlPanel: ControlPanel;
 
   constructor(container: HTMLCanvasElement, defaultNodes?: Node<NodeType>[]) {
     this.canvas = container;
@@ -28,6 +30,7 @@ export class GraphEditor<NodeType> {
     if (!glContext) {
       throw new Error("WebGL2 is not supported");
     }
+    this.controlPanel = new ControlPanel(this.canvas);
     this.gl = glContext;
 
     // Initialize shaders and program
