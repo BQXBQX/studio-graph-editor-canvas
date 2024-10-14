@@ -39,7 +39,8 @@ export class GraphEditor<NodeType> {
     // Add some circle nodes
     this.nodes$.next(
       (defaultNodes ?? []).map(
-        (defaultNode) => new CircleNode(this.gl, defaultNode)
+        (defaultNode) =>
+          new CircleNode<NodeType>(this.gl, defaultNode, this.canvas)
       )
     );
 

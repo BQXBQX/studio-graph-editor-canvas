@@ -1,4 +1,4 @@
-export class Texture {
+export class TextTexture {
   private gl: WebGL2RenderingContext;
   private texture: WebGLTexture | null = null;
 

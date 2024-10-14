@@ -1,15 +1,31 @@
+import { fromEvent } from "rxjs";
+
 export class TextLabel {
   private element: HTMLDivElement;
+  private containerElement: HTMLDivElement | null = null;
+  private canvas: HTMLCanvasElement;
 
   constructor(
     text: string,
     x: number,
     y: number,
     offsetX: number,
-    offsetY: number
+    offsetY: number,
+    canvas: HTMLCanvasElement
   ) {
+    this.canvas = canvas;
+
+    if (!this.containerElement) {
+      this.containerElement = document.createElement("div");
+      this.containerElement.style.position = "absolute";
+      this.containerElement.style.overflow = "hidden";
+      this.containerElement.style.pointerEvents = "none";
+      document.body.appendChild(this.containerElement);
+    }
+
     // Create a div element for the label
     this.element = document.createElement("div");
+    this.containerElement.appendChild(this.element);
     this.element.textContent = text;
     this.element.style.position = "absolute";
     this.element.style.fontSize = "16px";
@@ -20,7 +36,24 @@ export class TextLabel {
     this.setPosition(x, y, offsetX, offsetY);
 
     // Append the label to the body (or another container)
-    document.body.appendChild(this.element);
+
+    this.updateTextContainerSize();
+
+    fromEvent(window, "resize").subscribe(() => {
+      this.updateTextContainerSize();
+    });
+  }
+
+  private updateTextContainerSize(): void {
+    // this.containerElement?.style =
+    if (!this.containerElement) {
+      throw new Error("Container element not found");
+    }
+
+    this.containerElement.style.width = `${this.canvas.clientWidth}px`;
+    this.containerElement.style.height = `${this.canvas.clientHeight}px`;
+    this.containerElement.style.left = `${this.canvas.offsetLeft}px`;
+    this.containerElement.style.top = `${this.canvas.offsetTop}px`;
   }
 
   // Update the label text

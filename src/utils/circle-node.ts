@@ -19,17 +19,19 @@ export class CircleNode<T> {
   private borderColor$: BehaviorSubject<[number, number, number, number]>;
   private borderWidth$: BehaviorSubject<number>;
   private data$: BehaviorSubject<T>;
-  private textLabel: TextLabel;
 
+  private textLabel: TextLabel;
   public isDragging: boolean = false;
   private dragStartOffset: [number, number] = [0, 0];
   private scale: number = 1; // 硬编码缩放因子为 0.7
+  private canvas: HTMLCanvasElement;
 
   // private program: WebGLProgram;
 
   constructor(
     gl: WebGL2RenderingContext,
     nodeProps: Node<T>,
+    canvas: HTMLCanvasElement,
     radius: number = 80,
     borderColor: [number, number, number, number] = [0, 0, 0, 1],
     borderWidth: number = 6
@@ -47,13 +49,15 @@ export class CircleNode<T> {
     );
     this.borderWidth$ = new BehaviorSubject<number>(borderWidth);
     this.data$ = new BehaviorSubject<T>(nodeProps.data);
+    this.canvas = canvas;
 
     this.textLabel = new TextLabel(
       nodeProps.label ?? "",
       nodeProps.position[0],
       nodeProps.position[1],
       0,
-      0
+      0,
+      canvas
     );
 
     combineLatest([this.offset$, this.position$, this.radius$]).subscribe(
