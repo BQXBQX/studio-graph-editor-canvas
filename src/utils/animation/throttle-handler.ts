@@ -1,4 +1,4 @@
-export class ThrottleHandler<T extends Event> {
+export class ThrottleHandler<T> {
   private callback: (event: T) => void;
   private animationFrameId: number | null = null;
   private lastEvent: T | null = null;

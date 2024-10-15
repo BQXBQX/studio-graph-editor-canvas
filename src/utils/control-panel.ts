@@ -1,12 +1,16 @@
-import { fromEvent } from "rxjs";
+import { BehaviorSubject, fromEvent } from "rxjs";
 import editorStore from "../store/editor-store";
 
 export class ControlPanel {
   private canvas: HTMLCanvasElement;
   private controlPanelWrapper: HTMLDivElement = document.createElement("div");
+  private scale$: BehaviorSubject<number>;
+  private zoomLevel = 0;
 
   constructor(key: string) {
-    this.canvas = editorStore.getEditorState(key)?.canvas!;
+    const currentEditorState = editorStore.getEditorState(key)!;
+    this.canvas = currentEditorState.canvas;
+    this.scale$ = currentEditorState.scale$;
 
     this.controlPanelWrapper.style.position = "absolute";
     this.controlPanelWrapper.style.pointerEvents = "none";
@@ -29,6 +33,21 @@ export class ControlPanel {
     this.createControlPanel();
   }
 
+  private zoomIn() {
+    console.log(this.zoomLevel);
+    if (this.zoomLevel >= -2 && this.scale$.getValue() > 0.6) {
+      this.scale$.next(0.8);
+      this.zoomLevel--;
+    }
+  }
+
+  private ZoomOut() {
+    if (this.zoomLevel <= 2 && this.scale$.getValue() < 1.4) {
+      this.scale$.next(1.25);
+      this.zoomLevel++;
+    }
+  }
+
   private createControlPanel() {
     // 创建控制面板容器
     const controlPanelContainer = document.createElement("div");
@@ -40,8 +59,14 @@ export class ControlPanel {
     controlPanelContainer.style.zIndex = "100";
 
     // 添加按钮到面板
-    const zoomInButton = this.createButton("zoom-in.svg", null);
-    const zoomOutButton = this.createButton("zoom-out.svg", null);
+    const zoomOutButton = this.createButton(
+      "zoom-out.svg",
+      this.ZoomOut.bind(this)
+    );
+    const zoomInButton = this.createButton(
+      "zoom-in.svg",
+      this.zoomIn.bind(this)
+    );
     const addNodeButton = this.createButton("add-node.svg", null);
     const clearCanvasButton = this.createButton("clear-canvas.svg", null);
 
@@ -88,9 +113,8 @@ export class ControlPanel {
     img.style.height = "100%";
 
     button.appendChild(img);
-    button.addEventListener("click", () => {
-      console.log("hello");
-    });
+
+    callback && button.addEventListener("click", () => callback());
 
     return button;
   }

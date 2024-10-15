@@ -23,6 +23,7 @@ export class GraphEditor<NodeType> {
   private canvasOffset$ = new BehaviorSubject<[number, number]>([0, 0]);
   private controlPanel: ControlPanel;
   private key: string;
+  private scale$: BehaviorSubject<number>;
 
   constructor(
     container: HTMLCanvasElement,
@@ -30,7 +31,10 @@ export class GraphEditor<NodeType> {
     defaultNodes?: Node<NodeType>[]
   ) {
     editorStore.createState(key, container);
-    this.canvas = editorStore.getEditorState(key)?.canvas!;
+    const currentEditorState = editorStore.getEditorState(key)!;
+    this.canvas = currentEditorState.canvas;
+    this.scale$ = currentEditorState.scale$;
+
     this.key = key;
 
     const glContext = this.canvas.getContext("webgl2", {
@@ -64,6 +68,7 @@ export class GraphEditor<NodeType> {
       this.canvasSize$,
       this.nodes$,
       this.canvasOffset$,
+      this.scale$,
     ]).subscribe(() => {
       this.drawScene();
     });
@@ -218,8 +223,4 @@ export class GraphEditor<NodeType> {
       this.canvas.style.cursor = "unset";
     });
   }
-
-  // private setScale(scale: number) {
-  //   // scale
-  // }
 }
