@@ -69,7 +69,7 @@ export class ControlPanel {
     button.style.cursor = "pointer";
 
     const img = document.createElement("img");
-    img.src = `public/${icon}`;
+    img.src = `${icon}`;
     img.style.width = "100%";
     img.style.height = "100%";
 

@@ -26,6 +26,7 @@ export class CircleNode<T> {
   public isDragging: boolean = false;
   private dragStartOffset: [number, number] = [0, 0];
   private scale: BehaviorSubject<number>; // 硬编码缩放因子为 0.7
+  private zoomCenter: [number, number] = [0, 0]; // 缩放中心点（鼠标位置）
 
   // private program: WebGLProgram;
 
