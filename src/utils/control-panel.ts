@@ -3,7 +3,7 @@ import editorStore from "../store/editor-store";
 export class ControlPanel {
   private canvas: HTMLCanvasElement;
   private controlPanelWrapper: HTMLDivElement = document.createElement("div");
-  private scale$: BehaviorSubject<number>;
+  private zoomStep$: BehaviorSubject<number>;
   private zoomLevel = 0;
   private animationFrameId: number | null = null; // 用于存储上一次动画的 ID
 
@@ -12,7 +12,7 @@ export class ControlPanel {
   constructor(key: string) {
     const currentEditorState = editorStore.getEditorState(key)!;
     this.canvas = currentEditorState.canvas;
-    this.scale$ = currentEditorState.scale$;
+    this.zoomStep$ = currentEditorState.zoomStep$;
 
     this.controlPanelWrapper.style.position = "absolute";
     this.controlPanelWrapper.style.pointerEvents = "none";
@@ -25,6 +25,7 @@ export class ControlPanel {
     statementText.style.right = "10px";
     statementText.style.fontFamily = "monospace";
     statementText.style.fontSize = "1rem";
+    statementText.style.color = "black";
 
     this.controlPanelWrapper.appendChild(statementText);
 
@@ -50,7 +51,7 @@ export class ControlPanel {
     const zoomStep = () => {
       if (count < this.speedFactor) {
         const newScale = 1 + step;
-        this.scale$.next(newScale);
+        this.zoomStep$.next(newScale);
         count++;
         this.animationFrameId = requestAnimationFrame(zoomStep);
       } else {

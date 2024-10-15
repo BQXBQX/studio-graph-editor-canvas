@@ -9,7 +9,9 @@ export class CircleNode<T> {
   private borderBuffer: WebGLBuffer | null = null;
   private numVertices: number = 0;
   private numBorderVertices: number = 0;
+  private graphEditorKey: string;
   public isSelect: boolean = false;
+
 
   // RxJS subjects to manage updates
   private position$: BehaviorSubject<[number, number]>;
@@ -25,7 +27,6 @@ export class CircleNode<T> {
   private textLabel: TextLabel;
   public isDragging: boolean = false;
   private dragStartOffset: [number, number] = [0, 0];
-  private scale$: BehaviorSubject<number>;
   // private zoomCenter: [number, number] = [0, 0]; // 缩放中心点（鼠标位置）
 
   // private program: WebGLProgram;
@@ -39,8 +40,8 @@ export class CircleNode<T> {
     borderWidth: number = 6
   ) {
     this.gl = gl;
+    this.graphEditorKey = key;
 
-    this.scale$ = editorStore.getEditorState(key)?.scale$!;
 
     this.position$ = new BehaviorSubject<[number, number]>(nodeProps.position);
     this.offset$ = new BehaviorSubject<[number, number]>([0, 0]);
@@ -81,26 +82,26 @@ export class CircleNode<T> {
     );
 
     // this.setScale();
-    this.scale$.subscribe(() => {
-      console.log(this.scale$.getValue());
-      this.setScale();
+    editorStore.getEditorState(key)!.zoomStep$.subscribe(() => {
+      this.updateZoomLevel();
       this.updateBuffers();
     });
   }
 
-  private setScale(): void {
+  private updateZoomLevel(): void {
+    const zoomStep = editorStore.getEditorState(this.graphEditorKey)!.zoomStep$.getValue();
     // 更新位置和偏移量
     const currentPosition = this.position$.getValue();
     this.position$.next([
-      currentPosition[0] * this.scale$.getValue(),
-      currentPosition[1] * this.scale$.getValue(),
+      currentPosition[0] * zoomStep,
+      currentPosition[1] * zoomStep,
     ]);
 
     const currentOffset = this.offset$.getValue();
     this.offset$.next([currentOffset[0], currentOffset[1]]);
 
     const currentRadius = this.radius$.getValue();
-    this.radius$.next(currentRadius * this.scale$.getValue());
+    this.radius$.next(currentRadius * zoomStep);
   }
 
   private updateBuffers(): void {

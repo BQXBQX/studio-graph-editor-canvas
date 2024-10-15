@@ -1,22 +1,18 @@
 import { BehaviorSubject } from "rxjs";
 
 class EditorState {
-  public scale$: BehaviorSubject<number>;
+  public zoomStep$: BehaviorSubject<number>;
   public canvas: HTMLCanvasElement;
   public key: string;
 
   constructor(
     canvas: HTMLCanvasElement,
     key: string,
-    initialScale: number = 1
+    initialZoomStep: number = 1
   ) {
-    this.scale$ = new BehaviorSubject<number>(initialScale);
+    this.zoomStep$ = new BehaviorSubject<number>(initialZoomStep);
     this.canvas = canvas;
     this.key = key;
-  }
-
-  setScale(newScale: number): void {
-    this.scale$.next(newScale);
   }
 }
 

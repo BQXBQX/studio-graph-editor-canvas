@@ -23,7 +23,7 @@ export class GraphEditor<NodeType> {
   private canvasOffset$ = new BehaviorSubject<[number, number]>([0, 0]);
   private controlPanel: ControlPanel;
   private key: string;
-  private scale$: BehaviorSubject<number>;
+  // private scale$: BehaviorSubject<number>;
 
   constructor(
     container: HTMLCanvasElement,
@@ -33,7 +33,7 @@ export class GraphEditor<NodeType> {
     editorStore.createState(key, container);
     const currentEditorState = editorStore.getEditorState(key)!;
     this.canvas = currentEditorState.canvas;
-    this.scale$ = currentEditorState.scale$;
+    // this.scale$ = currentEditorState.zoomStep$;
 
     this.key = key;
 
@@ -68,7 +68,7 @@ export class GraphEditor<NodeType> {
       this.canvasSize$,
       this.nodes$,
       this.canvasOffset$,
-      this.scale$,
+      currentEditorState.zoomStep$
     ]).subscribe(() => {
       this.drawScene();
     });
