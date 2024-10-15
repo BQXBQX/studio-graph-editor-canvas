@@ -1,8 +1,19 @@
+import { fromEvent } from "rxjs";
+
 export class ControlPanel {
   private canvas: HTMLCanvasElement;
+  private controlPanelWrapper: HTMLDivElement = document.createElement("div");
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
+
+    this.controlPanelWrapper.style.position = "absolute";
+    this.controlPanelWrapper.style.pointerEvents = "none";
+    this.updateControlPanelSize();
+
+    fromEvent(window, "resize").subscribe(() => {
+      this.updateControlPanelSize();
+    });
 
     this.createControlPanel();
   }
@@ -28,8 +39,21 @@ export class ControlPanel {
     controlPanelContainer.appendChild(addNodeButton);
     controlPanelContainer.appendChild(clearCanvasButton);
 
+    this.controlPanelWrapper.appendChild(controlPanelContainer);
     // 添加到 body 中
-    document.body.appendChild(controlPanelContainer);
+    document.body.appendChild(this.controlPanelWrapper);
+  }
+
+  private updateControlPanelSize(): void {
+    // this.containerElement?.style =
+    if (!this.controlPanelWrapper) {
+      throw new Error("Container element not found");
+    }
+
+    this.controlPanelWrapper.style.width = `${this.canvas.clientWidth}px`;
+    this.controlPanelWrapper.style.height = `${this.canvas.clientHeight}px`;
+    this.controlPanelWrapper.style.left = `${this.canvas.offsetLeft}px`;
+    this.controlPanelWrapper.style.top = `${this.canvas.offsetTop}px`;
   }
 
   private createButton(

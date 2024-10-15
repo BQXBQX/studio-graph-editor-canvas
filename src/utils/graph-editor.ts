@@ -187,7 +187,9 @@ export class GraphEditor<NodeType> {
       }
     });
 
-    const dragCanvasThrottleHandler = new ThrottleHandler<MouseEvent>(dragCanvas);
+    const dragCanvasThrottleHandler = new ThrottleHandler<MouseEvent>(
+      dragCanvas
+    );
 
     // Mouse move event to update canvas position while dragging
     this.canvas.addEventListener("mousemove", (event) =>
@@ -207,5 +209,9 @@ export class GraphEditor<NodeType> {
       this.nodes$.getValue().forEach((node) => node.stopDragging());
       this.canvas.style.cursor = "unset";
     });
+  }
+
+  private setScale(scale:number) {
+    // scale
   }
 }
