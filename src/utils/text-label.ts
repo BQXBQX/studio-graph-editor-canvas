@@ -1,4 +1,5 @@
 import { fromEvent } from "rxjs";
+import editorStore from "../store/editor-store";
 
 export class TextLabel {
   private element: HTMLDivElement;
@@ -11,9 +12,9 @@ export class TextLabel {
     y: number,
     offsetX: number,
     offsetY: number,
-    canvas: HTMLCanvasElement
+    key: string
   ) {
-    this.canvas = canvas;
+    this.canvas = editorStore.getEditorState(key)?.canvas!;
 
     if (!this.containerElement) {
       this.containerElement = document.createElement("div");

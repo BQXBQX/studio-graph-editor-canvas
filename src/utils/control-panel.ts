@@ -1,11 +1,12 @@
 import { fromEvent } from "rxjs";
+import editorStore from "../store/editor-store";
 
 export class ControlPanel {
   private canvas: HTMLCanvasElement;
   private controlPanelWrapper: HTMLDivElement = document.createElement("div");
 
-  constructor(canvas: HTMLCanvasElement) {
-    this.canvas = canvas;
+  constructor(key: string) {
+    this.canvas = editorStore.getEditorState(key)?.canvas!;
 
     this.controlPanelWrapper.style.position = "absolute";
     this.controlPanelWrapper.style.pointerEvents = "none";

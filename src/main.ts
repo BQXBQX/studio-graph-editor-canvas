@@ -38,4 +38,4 @@ const defaultNodes: Node<NodeProps>[] = [
   },
 ];
 
-new GraphEditor<NodeProps>(canvas, defaultNodes);
+new GraphEditor<NodeProps>(canvas, "hello", defaultNodes);

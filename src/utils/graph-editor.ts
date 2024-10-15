@@ -7,6 +7,7 @@ import vertex from "../glsl/vertex-shader-source.glsl?raw";
 import { Node } from "../types/node";
 import { ControlPanel } from "./control-panel";
 import { ThrottleHandler } from "./animation/throttle-handler";
+import editorStore from "../store/editor-store";
 
 export class GraphEditor<NodeType> {
   private canvas: HTMLCanvasElement;
@@ -21,9 +22,16 @@ export class GraphEditor<NodeType> {
   private lastMousePosition: [number, number] = [0, 0];
   private canvasOffset$ = new BehaviorSubject<[number, number]>([0, 0]);
   private controlPanel: ControlPanel;
+  private key: string;
 
-  constructor(container: HTMLCanvasElement, defaultNodes?: Node<NodeType>[]) {
-    this.canvas = container;
+  constructor(
+    container: HTMLCanvasElement,
+    key: string,
+    defaultNodes?: Node<NodeType>[]
+  ) {
+    editorStore.createState(key, container);
+    this.canvas = editorStore.getEditorState(key)?.canvas!;
+    this.key = key;
 
     const glContext = this.canvas.getContext("webgl2", {
       preserveDrawingBuffer: true,
@@ -31,7 +39,7 @@ export class GraphEditor<NodeType> {
     if (!glContext) {
       throw new Error("WebGL2 is not supported");
     }
-    this.controlPanel = new ControlPanel(this.canvas);
+    this.controlPanel = new ControlPanel(this.key);
     this.gl = glContext;
 
     // Initialize shaders and program
@@ -44,7 +52,7 @@ export class GraphEditor<NodeType> {
     this.nodes$.next(
       (defaultNodes ?? []).map(
         (defaultNode) =>
-          new CircleNode<NodeType>(this.gl, defaultNode, this.canvas)
+          new CircleNode<NodeType>(this.gl, defaultNode, this.key)
       )
     );
 
@@ -211,7 +219,7 @@ export class GraphEditor<NodeType> {
     });
   }
 
-  private setScale(scale:number) {
-    // scale
-  }
+  // private setScale(scale: number) {
+  //   // scale
+  // }
 }

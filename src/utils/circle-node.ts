@@ -1,6 +1,7 @@
 import { BehaviorSubject, combineLatest } from "rxjs";
 import { Node } from "../types/node";
 import { TextLabel } from "./text-label";
+import editorStore from "../store/editor-store";
 
 export class CircleNode<T> {
   private gl: WebGL2RenderingContext;
@@ -24,20 +25,21 @@ export class CircleNode<T> {
   private textLabel: TextLabel;
   public isDragging: boolean = false;
   private dragStartOffset: [number, number] = [0, 0];
-  private scale: number = 1; // 硬编码缩放因子为 0.7
-  private canvas: HTMLCanvasElement;
+  private scale: BehaviorSubject<number>; // 硬编码缩放因子为 0.7
 
   // private program: WebGLProgram;
 
   constructor(
     gl: WebGL2RenderingContext,
     nodeProps: Node<T>,
-    canvas: HTMLCanvasElement,
+    key: string,
     radius: number = 80,
     borderColor: [number, number, number, number] = [0, 0, 0, 1],
     borderWidth: number = 6
   ) {
     this.gl = gl;
+
+    this.scale = editorStore.getEditorState(key)?.scale$!;
 
     this.position$ = new BehaviorSubject<[number, number]>(nodeProps.position);
     this.offset$ = new BehaviorSubject<[number, number]>([0, 0]);
@@ -50,7 +52,6 @@ export class CircleNode<T> {
     );
     this.borderWidth$ = new BehaviorSubject<number>(borderWidth);
     this.data$ = new BehaviorSubject<T>(nodeProps.data);
-    this.canvas = canvas;
 
     this.textLabel = new TextLabel(
       nodeProps.label ?? "",
@@ -58,7 +59,7 @@ export class CircleNode<T> {
       nodeProps.position[1],
       0,
       0,
-      canvas
+      key
     );
 
     this.borderColor$.subscribe(() => {
@@ -78,31 +79,35 @@ export class CircleNode<T> {
       }
     );
 
-    this.setScale();
+    // this.setScale();
+    this.scale.subscribe(() => {
+      this.setScale();
+      this.updateBuffers();
+    });
   }
 
   private setScale(): void {
     // 更新位置和偏移量
     const currentPosition = this.position$.getValue();
     this.position$.next([
-      currentPosition[0] * this.scale,
-      currentPosition[1] * this.scale,
+      currentPosition[0] * this.scale.getValue(),
+      currentPosition[1] * this.scale.getValue(),
     ]);
 
     console.log(
       "position",
-      currentPosition[0] * this.scale,
-      currentPosition[1] * this.scale
+      currentPosition[0] * this.scale.getValue(),
+      currentPosition[1] * this.scale.getValue()
     );
 
     const currentOffset = this.offset$.getValue();
     this.offset$.next([
-      currentOffset[0] * this.scale,
-      currentOffset[1] * this.scale,
+      currentOffset[0] * this.scale.getValue(),
+      currentOffset[1] * this.scale.getValue(),
     ]);
 
     const currentRadius = this.radius$.getValue();
-    this.radius$.next(currentRadius * this.scale);
+    this.radius$.next(currentRadius * this.scale.getValue());
   }
 
   private updateBuffers(): void {
