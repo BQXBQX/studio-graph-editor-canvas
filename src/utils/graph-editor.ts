@@ -136,7 +136,10 @@ export class GraphEditor<NodeType> {
 
   // Adding mouse event handlers
   private addDragHandlers(): void {
-    const dragCanvas = (event: MouseEvent) => {
+    const dragCanvas = (event: MouseEvent | undefined) => {
+      if (!event) {
+        throw new Error("Event is undefined");
+      }
       const mouseX = event.clientX - this.canvas.offsetLeft;
       const mouseY = event.clientY - this.canvas.offsetTop;
 

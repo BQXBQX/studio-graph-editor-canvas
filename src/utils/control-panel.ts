@@ -1,11 +1,13 @@
 import { BehaviorSubject, fromEvent } from "rxjs";
 import editorStore from "../store/editor-store";
-
 export class ControlPanel {
   private canvas: HTMLCanvasElement;
   private controlPanelWrapper: HTMLDivElement = document.createElement("div");
   private scale$: BehaviorSubject<number>;
   private zoomLevel = 0;
+  private animationFrameId: number | null = null; // 用于存储上一次动画的 ID
+
+  private speedFactor = 20; // 每次缩放分为 20 步完成
 
   constructor(key: string) {
     const currentEditorState = editorStore.getEditorState(key)!;
@@ -33,23 +35,33 @@ export class ControlPanel {
     this.createControlPanel();
   }
 
-  private zoomIn() {
-    console.log(this.zoomLevel);
-    if (this.zoomLevel >= -2 && this.scale$.getValue() > 0.6) {
-      this.scale$.next(0.8);
-      this.zoomLevel--;
+  // 平滑缩放逻辑，目标 scale 是 targetScale，分为 speedFactor 步进行缩放
+  private smoothZoom(targetScale: number) {
+    // 如果有之前的动画正在进行，取消它
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
     }
-  }
 
-  private ZoomOut() {
-    if (this.zoomLevel <= 2 && this.scale$.getValue() < 1.4) {
-      this.scale$.next(1.25);
-      this.zoomLevel++;
-    }
+    const step = (targetScale - 1) / this.speedFactor;
+
+    let count = 0;
+
+    const zoomStep = () => {
+      if (count < this.speedFactor) {
+        const newScale = 1 + step;
+        this.scale$.next(newScale);
+        count++;
+        this.animationFrameId = requestAnimationFrame(zoomStep);
+      } else {
+        this.animationFrameId = null;
+      }
+    };
+
+    zoomStep();
   }
 
   private createControlPanel() {
-    // 创建控制面板容器
     const controlPanelContainer = document.createElement("div");
     controlPanelContainer.style.position = "absolute";
     controlPanelContainer.style.top = "10px";
@@ -58,14 +70,11 @@ export class ControlPanel {
     controlPanelContainer.style.gap = "10px";
     controlPanelContainer.style.zIndex = "100";
 
-    // 添加按钮到面板
-    const zoomOutButton = this.createButton(
-      "zoom-out.svg",
-      this.ZoomOut.bind(this)
+    const zoomOutButton = this.createButton("zoom-out.svg", () =>
+      this.smoothZoom(1.25)
     );
-    const zoomInButton = this.createButton(
-      "zoom-in.svg",
-      this.zoomIn.bind(this)
+    const zoomInButton = this.createButton("zoom-in.svg", () =>
+      this.smoothZoom(0.8)
     );
     const addNodeButton = this.createButton("add-node.svg", null);
     const clearCanvasButton = this.createButton("clear-canvas.svg", null);
@@ -76,12 +85,10 @@ export class ControlPanel {
     controlPanelContainer.appendChild(clearCanvasButton);
 
     this.controlPanelWrapper.appendChild(controlPanelContainer);
-    // 添加到 body 中
     document.body.appendChild(this.controlPanelWrapper);
   }
 
   private updateControlPanelSize(): void {
-    // this.containerElement?.style =
     if (!this.controlPanelWrapper) {
       throw new Error("Container element not found");
     }
@@ -114,7 +121,9 @@ export class ControlPanel {
 
     button.appendChild(img);
 
-    callback && button.addEventListener("click", () => callback());
+    if (callback) {
+      button.addEventListener("click", () => callback());
+    }
 
     return button;
   }
