@@ -30,10 +30,9 @@ export class GraphEditor<NodeType> {
     key: string,
     defaultNodes?: Node<NodeType>[]
   ) {
-    editorStore.createState(key, container);
+    editorStore.createState(key, container, defaultNodes ?? []);
     const currentEditorState = editorStore.getEditorState(key)!;
     this.canvas = currentEditorState.canvas;
-    // this.scale$ = currentEditorState.zoomStep$;
 
     this.key = key;
 
@@ -53,12 +52,14 @@ export class GraphEditor<NodeType> {
     this.gl.clearColor(245 / 255, 245 / 255, 245 / 255, 1);
 
     // Add some circle nodes
-    this.nodes$.next(
-      (defaultNodes ?? []).map(
-        (defaultNode) =>
-          new CircleNode<NodeType>(this.gl, defaultNode, this.key)
-      )
-    );
+    currentEditorState.nodes$.subscribe((nodes) => {
+      this.nodes$.next(
+        (nodes ?? []).map(
+          (defaultNode) =>
+            new CircleNode<NodeType>(this.gl, defaultNode, this.key)
+        )
+      );
+    })
 
     // Initialize resize event handler using RxJS
     fromEvent(window, "resize").subscribe(() => this.resizeCanvas());
@@ -125,8 +126,7 @@ export class GraphEditor<NodeType> {
   // private transformNodeToCir
   // Draw the scene by rendering all nodes
   private drawScene(): void {
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT | this.gl.STENCIL_BUFFER_BIT);
     // Get the current nodes and draw them
     const nodes = this.nodes$.getValue();
     for (const node of nodes) {

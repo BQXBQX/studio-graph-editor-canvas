@@ -1,10 +1,11 @@
 import { BehaviorSubject, fromEvent } from "rxjs";
 import editorStore from "../store/editor-store";
+import { Node } from "../types/node";
 export class ControlPanel {
   private canvas: HTMLCanvasElement;
   private controlPanelWrapper: HTMLDivElement = document.createElement("div");
   private zoomStep$: BehaviorSubject<number>;
-  private zoomLevel = 0;
+  private nodes$: BehaviorSubject<Node<any>[]>;
   private animationFrameId: number | null = null; // 用于存储上一次动画的 ID
 
   private speedFactor = 20; // 每次缩放分为 20 步完成
@@ -13,6 +14,7 @@ export class ControlPanel {
     const currentEditorState = editorStore.getEditorState(key)!;
     this.canvas = currentEditorState.canvas;
     this.zoomStep$ = currentEditorState.zoomStep$;
+    this.nodes$ = currentEditorState.nodes$;
 
     this.controlPanelWrapper.style.position = "absolute";
     this.controlPanelWrapper.style.pointerEvents = "none";
@@ -26,6 +28,7 @@ export class ControlPanel {
     statementText.style.fontFamily = "monospace";
     statementText.style.fontSize = "1rem";
     statementText.style.color = "black";
+    statementText.style.fontWeight = "bold"
 
     this.controlPanelWrapper.appendChild(statementText);
 
@@ -78,7 +81,7 @@ export class ControlPanel {
       this.smoothZoom(0.8)
     );
     const addNodeButton = this.createButton("add-node.svg", null);
-    const clearCanvasButton = this.createButton("clear-canvas.svg", null);
+    const clearCanvasButton = this.createButton("clear-canvas.svg", () => this.nodes$.next([]));
 
     controlPanelContainer.appendChild(zoomInButton);
     controlPanelContainer.appendChild(zoomOutButton);

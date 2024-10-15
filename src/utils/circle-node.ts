@@ -12,7 +12,6 @@ export class CircleNode<T> {
   private graphEditorKey: string;
   public isSelect: boolean = false;
 
-
   // RxJS subjects to manage updates
   private position$: BehaviorSubject<[number, number]>;
   private offset$: BehaviorSubject<[number, number]> = new BehaviorSubject([
@@ -24,7 +23,7 @@ export class CircleNode<T> {
   private borderWidth$: BehaviorSubject<number>;
   private data$: BehaviorSubject<T>;
 
-  private textLabel: TextLabel;
+  public textLabel: TextLabel;
   public isDragging: boolean = false;
   private dragStartOffset: [number, number] = [0, 0];
   // private zoomCenter: [number, number] = [0, 0]; // 缩放中心点（鼠标位置）

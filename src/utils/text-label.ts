@@ -75,6 +75,6 @@ export class TextLabel {
 
   // Remove the label
   public remove(): void {
-    this.element.remove();
+    this.containerElement!.remove();
   }
 }
