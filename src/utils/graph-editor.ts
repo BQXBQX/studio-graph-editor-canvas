@@ -6,6 +6,7 @@ import fragment from "../glsl/fragment-shader-source.glsl?raw";
 import vertex from "../glsl/vertex-shader-source.glsl?raw";
 import { Node } from "../types/node";
 import { ControlPanel } from "./control-panel";
+import { ThrottleHandler } from "./animation/throttle-handler";
 
 export class GraphEditor<NodeType> {
   private canvas: HTMLCanvasElement;
@@ -122,35 +123,7 @@ export class GraphEditor<NodeType> {
 
   // Adding mouse event handlers
   private addDragHandlers(): void {
-    // Mouse down event to start dragging
-    this.canvas.addEventListener("mousedown", (event) => {
-      const mouseX = event.clientX - this.canvas.offsetLeft;
-      const mouseY = event.clientY - this.canvas.offsetTop;
-
-      let clickedNode: CircleNode<NodeType> | null = null;
-
-      this.nodes$.getValue().forEach((node) => {
-        node.setSelect(false);
-        if (node.isMouseOver(mouseX, mouseY)) {
-          clickedNode = node;
-          clickedNode.setSelect(true);
-        }
-      });
-
-      // TODO: Here we can optimize the number of data update
-      this.drawScene();
-
-      console.log(clickedNode);
-      if (clickedNode) {
-        (clickedNode as CircleNode<NodeType>).startDragging(mouseX, mouseY);
-      } else {
-        this.isDragging = true;
-        this.lastMousePosition = [event.clientX, event.clientY];
-      }
-    });
-
-    // Mouse move event to update canvas position while dragging
-    this.canvas.addEventListener("mousemove", (event) => {
+    const dragCanvas = (event: MouseEvent) => {
       const mouseX = event.clientX - this.canvas.offsetLeft;
       const mouseY = event.clientY - this.canvas.offsetTop;
 
@@ -186,7 +159,40 @@ export class GraphEditor<NodeType> {
           this.lastMousePosition = [event.clientX, event.clientY];
         }
       }
+    };
+    // Mouse down event to start dragging
+    this.canvas.addEventListener("mousedown", (event) => {
+      const mouseX = event.clientX - this.canvas.offsetLeft;
+      const mouseY = event.clientY - this.canvas.offsetTop;
+
+      let clickedNode: CircleNode<NodeType> | null = null;
+
+      this.nodes$.getValue().forEach((node) => {
+        node.setSelect(false);
+        if (node.isMouseOver(mouseX, mouseY)) {
+          clickedNode = node;
+          clickedNode.setSelect(true);
+        }
+      });
+
+      // TODO: Here we can optimize the number of data update
+      this.drawScene();
+
+      console.log(clickedNode);
+      if (clickedNode) {
+        (clickedNode as CircleNode<NodeType>).startDragging(mouseX, mouseY);
+      } else {
+        this.isDragging = true;
+        this.lastMousePosition = [event.clientX, event.clientY];
+      }
     });
+
+    const dragCanvasThrottleHandler = new ThrottleHandler<MouseEvent>(dragCanvas);
+
+    // Mouse move event to update canvas position while dragging
+    this.canvas.addEventListener("mousemove", (event) =>
+      dragCanvasThrottleHandler.handleEvent(event)
+    );
 
     // Mouse up event to stop dragging
     this.canvas.addEventListener("mouseup", () => {
