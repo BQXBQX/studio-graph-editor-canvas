@@ -8,7 +8,7 @@ class EditorState {
   constructor(
     canvas: HTMLCanvasElement,
     key: string,
-    initialScale: number = 0.5
+    initialScale: number = 1
   ) {
     this.scale$ = new BehaviorSubject<number>(initialScale);
     this.canvas = canvas;

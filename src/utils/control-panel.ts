@@ -12,6 +12,16 @@ export class ControlPanel {
     this.controlPanelWrapper.style.pointerEvents = "none";
     this.updateControlPanelSize();
 
+    const statementText = document.createElement("span");
+    statementText.textContent = "Graph Editor for @GraphScope based on WebGL2";
+    statementText.style.position = "absolute";
+    statementText.style.bottom = "10px";
+    statementText.style.right = "10px";
+    statementText.style.fontFamily = "monospace";
+    statementText.style.fontSize = "1rem";
+
+    this.controlPanelWrapper.appendChild(statementText);
+
     fromEvent(window, "resize").subscribe(() => {
       this.updateControlPanelSize();
     });
@@ -62,11 +72,15 @@ export class ControlPanel {
     callback: (() => void) | null
   ): HTMLButtonElement {
     const button = document.createElement("button");
-    button.style.width = "40px";
-    button.style.height = "40px";
+    button.style.width = "2.5rem";
+    button.style.height = "2.5rem";
     button.style.border = "none";
-    button.style.backgroundColor = "transparent";
+    button.style.backgroundColor = "white";
     button.style.cursor = "pointer";
+    button.style.boxShadow =
+      "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)";
+    button.style.borderRadius = "1rem";
+    button.style.pointerEvents = "auto";
 
     const img = document.createElement("img");
     img.src = `${icon}`;
@@ -74,7 +88,9 @@ export class ControlPanel {
     img.style.height = "100%";
 
     button.appendChild(img);
-    // button.addEventListener("click", callback);
+    button.addEventListener("click", () => {
+      console.log("hello");
+    });
 
     return button;
   }
