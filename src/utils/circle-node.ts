@@ -1,4 +1,4 @@
-import { BehaviorSubject, combineLatest } from "rxjs";
+import { BehaviorSubject, combineLatest, Subscription } from "rxjs";
 import { Node } from "../types/node";
 import { TextLabel } from "./text-label";
 import editorStore from "../store/editor-store";
@@ -22,6 +22,8 @@ export class CircleNode<T> {
   private borderColor$: BehaviorSubject<[number, number, number, number]>;
   private borderWidth$: BehaviorSubject<number>;
   private data$: BehaviorSubject<T>;
+
+  private subscriptions: Subscription[] = []; // Subscription array to collect all subscriptions
 
   public textLabel: TextLabel;
   public isDragging: boolean = false;
@@ -62,34 +64,47 @@ export class CircleNode<T> {
       key,
     );
 
-    this.borderColor$.subscribe(() => {
-      console.log("border color changed", this.borderColor$.getValue());
-      this.updateBuffers();
-    });
-
-    combineLatest([this.offset$, this.position$, this.radius$]).subscribe(
-      () => {
+    // Subscribe to border color changes
+    this.subscriptions.push(
+      this.borderColor$.subscribe(() => {
+        console.log("border color changed", this.borderColor$.getValue());
         this.updateBuffers();
-        this.textLabel.setPosition(
-          this.position$.getValue()[0],
-          this.position$.getValue()[1],
-          this.offset$.getValue()[0],
-          this.offset$.getValue()[1],
-        );
-      },
+      }),
     );
 
-    this.radius$.subscribe(() => {
-      console.log("radius changed", this.radius$.getValue());
-      editorStore
-        .getEditorState(this.graphEditorKey)
-        ?.setNodeRadius(this.radius$.getValue());
-    });
+    // Combine offset, position, and radius to update buffers and text label position
+    this.subscriptions.push(
+      combineLatest([this.offset$, this.position$, this.radius$]).subscribe(
+        () => {
+          this.updateBuffers();
+          this.textLabel.setPosition(
+            this.position$.getValue()[0],
+            this.position$.getValue()[1],
+            this.offset$.getValue()[0],
+            this.offset$.getValue()[1],
+          );
+        },
+      ),
+    );
 
-    editorStore.getEditorState(key)!.zoomStep$.subscribe(() => {
-      this.updateZoomLevel();
-      this.updateBuffers();
-    });
+    // Subscribe to radius changes
+    this.subscriptions.push(
+      this.radius$.subscribe(() => {
+        // console.log("radius changed", this.radius$.getValue());
+        editorStore
+          .getEditorState(this.graphEditorKey)
+          ?.setNodeRadius(this.radius$.getValue());
+      }),
+    );
+
+    // Subscribe to zoomStep changes
+    this.subscriptions.push(
+      editorStore.getEditorState(key)!.zoomStep$.subscribe(() => {
+        console.log("zoom step changed");
+        this.updateZoomLevel();
+        this.updateBuffers();
+      }),
+    );
   }
 
   private updateZoomLevel(
@@ -175,10 +190,6 @@ export class CircleNode<T> {
     );
   }
 
-  public dispose(): void {
-    this.textLabel.remove();
-  }
-
   public draw(program: WebGLProgram): void {
     const gl = this.gl;
 
@@ -209,10 +220,6 @@ export class CircleNode<T> {
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, this.numVertices);
   }
-
-  // public setOffset(offsetX: number, offsetY: number): void {
-  //   this.offset$.next([offsetX, offsetY]);
-  // }
 
   public setPosition(x: number, y: number): void {
     this.position$.next([x, y]);
@@ -251,5 +258,12 @@ export class CircleNode<T> {
       isSelect && this.borderColor$.next([25 / 255, 120 / 255, 255 / 255, 1]);
       !isSelect && this.borderColor$.next([0, 0, 0, 1]);
     }
+  }
+
+  public dispose(): void {
+    this.textLabel.remove();
+    // Unsubscribe from all RxJS subscriptions
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+    this.subscriptions = []; // Clear the array to avoid keeping references
   }
 }
