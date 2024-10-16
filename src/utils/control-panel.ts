@@ -1,12 +1,12 @@
 import { BehaviorSubject, fromEvent } from "rxjs";
-import editorStore from "../store/editor-store";
+import editorStore, { zoomProps } from "../store/editor-store";
 import { Node } from "../types/node";
 import { v4 as uuidv4 } from "uuid";
 
 export class ControlPanel {
   private canvas: HTMLCanvasElement;
   private controlPanelWrapper: HTMLDivElement = document.createElement("div");
-  private zoomStep$: BehaviorSubject<number>;
+  private zoomProps$: BehaviorSubject<zoomProps>;
   private nodes$: BehaviorSubject<Node<any>[]>;
   private animationFrameId: number | null = null;
   private key: string;
@@ -16,7 +16,7 @@ export class ControlPanel {
   constructor(key: string) {
     const currentEditorState = editorStore.getEditorState(key)!;
     this.canvas = currentEditorState.canvas;
-    this.zoomStep$ = currentEditorState.zoomStep$;
+    this.zoomProps$ = currentEditorState.zoomProps$;
     this.nodes$ = currentEditorState.nodes$;
     this.key = key;
 
@@ -58,7 +58,7 @@ export class ControlPanel {
     const zoomStep = () => {
       if (count < this.speedFactor) {
         const newScale = 1 + step;
-        this.zoomStep$.next(newScale);
+        this.zoomProps$.next({ zoomStep: newScale });
         count++;
         this.animationFrameId = requestAnimationFrame(zoomStep);
       } else {

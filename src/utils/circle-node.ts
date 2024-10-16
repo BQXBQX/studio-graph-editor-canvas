@@ -100,7 +100,7 @@ export class CircleNode<T> {
     );
 
     this.subscriptions.push(
-      editorStore.getEditorState(key)!.zoomStep$.subscribe((value) => {
+      editorStore.getEditorState(key)!.zoomProps$.subscribe((value) => {
         if (this.hasZoomStepChangedOnce) {
           console.log("zoom step changed", value);
           this.updateZoomLevel();
@@ -112,15 +112,15 @@ export class CircleNode<T> {
     );
   }
 
-  private updateZoomLevel(
-    zoomCenter: [number, number] = [
+  public updateZoomLevel(): void {
+    const zoomProps = editorStore
+      .getEditorState(this.graphEditorKey)!
+      .zoomProps$.getValue();
+    const zoomStep = zoomProps.zoomStep;
+    let zoomCenter = zoomProps.centerPosition ?? [
       editorStore.getEditorState(this.graphEditorKey)?.canvas.clientWidth! / 2,
       editorStore.getEditorState(this.graphEditorKey)?.canvas.clientHeight! / 2,
-    ],
-  ): void {
-    const zoomStep = editorStore
-      .getEditorState(this.graphEditorKey)!
-      .zoomStep$.getValue();
+    ];
     const currentPosition = this.position$.getValue();
     const currentOffset = this.offset$.getValue();
     const currentRadius = this.radius$.getValue();
@@ -129,8 +129,6 @@ export class CircleNode<T> {
       zoomCenter[0] * zoomStep - currentOffset[0] * zoomStep,
       zoomCenter[1] * zoomStep - currentOffset[1] * zoomStep,
     ];
-
-    // console.log("视图的中心", zoomCenter);
 
     // 计算新的 position，基于 zoom center
 

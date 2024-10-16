@@ -1,10 +1,15 @@
 import { BehaviorSubject } from "rxjs";
 import { Node } from "../types/node";
 
+export interface zoomProps {
+  centerPosition?: [number, number];
+  zoomStep: number;
+}
+
 class EditorState<NodeType> {
   public canvas: HTMLCanvasElement;
   public key: string;
-  public zoomStep$: BehaviorSubject<number>;
+  public zoomProps$: BehaviorSubject<zoomProps>;
   public nodes$: BehaviorSubject<Node<NodeType>[]> = new BehaviorSubject<
     Node<NodeType>[]
   >([]);
@@ -21,7 +26,9 @@ class EditorState<NodeType> {
   ) {
     this.canvas = canvas;
     this.key = key;
-    this.zoomStep$ = new BehaviorSubject<number>(initialZoomStep);
+    this.zoomProps$ = new BehaviorSubject<zoomProps>({
+      zoomStep: initialZoomStep,
+    });
     this.nodes$.next(initialNodes);
     this.offset$ = new BehaviorSubject<[number, number]>(initialOffset);
     this.nodeRadius = initialNodeRadius;

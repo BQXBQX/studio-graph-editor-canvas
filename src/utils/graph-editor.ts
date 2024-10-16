@@ -96,12 +96,13 @@ export class GraphEditor<NodeType> {
       this.canvasSize$,
       this.nodes$,
       this.canvasOffset$,
-      currentEditorState.zoomStep$,
+      currentEditorState.zoomProps$,
     ]).subscribe(() => {
       this.drawScene();
     });
 
     this.addDragHandlers();
+    this.addWheelHandlers();
 
     // Resize canvas and draw the scene
     this.resizeCanvas();
@@ -163,6 +164,20 @@ export class GraphEditor<NodeType> {
     for (const node of nodes) {
       node.draw(this.program);
     }
+  }
+
+  private addWheelHandlers(): void {
+    this.canvas.addEventListener("wheel", (event: WheelEvent) => {
+      console.log(event);
+      event.preventDefault();
+      const zoomStep = 1.1; // Adjust zoom step factor as needed
+      const delta = Math.sign(event.deltaY); // Get the direction of the scroll
+      const zoomFactor = delta > 0 ? 1 / zoomStep : zoomStep; // Invert zoom factor for scroll down
+
+      // Get the current zoom center (mouse position)
+      const mouseX = event.clientX;
+      const mouseY = event.clientY;
+    });
   }
 
   // Adding mouse event handlers
