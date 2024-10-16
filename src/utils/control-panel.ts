@@ -85,9 +85,14 @@ export class ControlPanel {
       this.smoothZoom(0.8),
     );
     const addNodeButton = this.createButton("add-node.svg", () => {
-      const randomX = Math.floor(Math.random() * window.innerWidth);
-      const randomY = Math.floor(Math.random() * window.innerHeight);
-      const offset = editorStore.getEditorState(this.key)!.offset$.getValue();
+      const editorState = editorStore.getEditorState(this.key)!;
+      const randomX = Math.floor(
+        editorState.canvas.clientWidth! * Math.random(),
+      );
+      const randomY = Math.floor(
+        editorState.canvas.clientHeight! * Math.random(),
+      );
+      const offset = editorState.offset$.getValue();
       console.log(offset);
       this.nodes$.next([
         ...this.nodes$.getValue(),

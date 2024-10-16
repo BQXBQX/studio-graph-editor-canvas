@@ -1,5 +1,5 @@
 import { CircleNode } from "./circle-node";
-import { BehaviorSubject, combineLatest, fromEvent, pairwise } from "rxjs";
+import { BehaviorSubject, combineLatest, fromEvent } from "rxjs";
 import createProgram from "./shader/create-program";
 import createShader from "./shader/create-shader";
 import fragment from "../glsl/fragment-shader-source.glsl?raw";

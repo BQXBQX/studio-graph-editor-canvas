@@ -92,21 +92,29 @@ export class CircleNode<T> {
     });
   }
 
-  private updateZoomLevel(): void {
+  private updateZoomLevel(
+    zoomCenter: [number, number] = [
+      editorStore.getEditorState(this.graphEditorKey)?.canvas.clientWidth! / 2,
+      editorStore.getEditorState(this.graphEditorKey)?.canvas.clientHeight! / 2,
+    ],
+  ): void {
     const zoomStep = editorStore
       .getEditorState(this.graphEditorKey)!
       .zoomStep$.getValue();
 
     const currentPosition = this.position$.getValue();
+    const currentOffset = this.offset$.getValue();
+    const currentRadius = this.radius$.getValue();
+
+    // 计算新的 position，基于 zoom center
+
     this.position$.next([
-      currentPosition[0] * zoomStep,
-      currentPosition[1] * zoomStep,
+      zoomCenter[0] + (currentPosition[0] - zoomCenter[0]) * zoomStep,
+      zoomCenter[1] + (currentPosition[1] - zoomCenter[1]) * zoomStep,
     ]);
 
-    const currentOffset = this.offset$.getValue();
+    // 更新 offset 和 radius
     this.offset$.next([currentOffset[0], currentOffset[1]]);
-
-    const currentRadius = this.radius$.getValue();
     this.radius$.next(currentRadius * zoomStep);
   }
 
