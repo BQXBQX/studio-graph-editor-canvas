@@ -212,6 +212,7 @@ export class GraphEditor<NodeType> {
 
       this.nodes$
         .getValue()
+        .slice()
         .reverse()
         .forEach((node) => {
           node.setSelect(false);

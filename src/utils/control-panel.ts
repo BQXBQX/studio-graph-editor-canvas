@@ -8,10 +8,10 @@ export class ControlPanel {
   private controlPanelWrapper: HTMLDivElement = document.createElement("div");
   private zoomStep$: BehaviorSubject<number>;
   private nodes$: BehaviorSubject<Node<any>[]>;
-  private animationFrameId: number | null = null; // 用于存储上一次动画的 ID
+  private animationFrameId: number | null = null;
   private key: string;
 
-  private speedFactor = 20; // 每次缩放分为 20 步完成
+  private speedFactor = 15;
 
   constructor(key: string) {
     const currentEditorState = editorStore.getEditorState(key)!;
