@@ -24,6 +24,7 @@ export class CircleNode<T> {
   private data$: BehaviorSubject<T>;
 
   private subscriptions: Subscription[] = []; // Subscription array to collect all subscriptions
+  private hasZoomStepChangedOnce: boolean = false; // Add this flag
 
   public textLabel: TextLabel;
   public isDragging: boolean = false;
@@ -46,6 +47,7 @@ export class CircleNode<T> {
     this.position$ = new BehaviorSubject<[number, number]>(nodeProps.position);
     this.offset$ = editorStore.getEditorState(key)!.offset$;
     this.radius$ = new BehaviorSubject<number>(radius);
+    console.log("半径", radius);
     this.backgroundColor$ = new BehaviorSubject<
       [number, number, number, number]
     >(nodeProps.backgroundColor ?? [1, 1, 1, 1]);
@@ -67,7 +69,7 @@ export class CircleNode<T> {
     // Subscribe to border color changes
     this.subscriptions.push(
       this.borderColor$.subscribe(() => {
-        console.log("border color changed", this.borderColor$.getValue());
+        // console.log("border color changed", this.borderColor$.getValue());
         this.updateBuffers();
       }),
     );
@@ -90,19 +92,22 @@ export class CircleNode<T> {
     // Subscribe to radius changes
     this.subscriptions.push(
       this.radius$.subscribe(() => {
-        // console.log("radius changed", this.radius$.getValue());
+        console.log("radius changed", this.radius$.getValue());
         editorStore
           .getEditorState(this.graphEditorKey)
           ?.setNodeRadius(this.radius$.getValue());
       }),
     );
 
-    // Subscribe to zoomStep changes
     this.subscriptions.push(
-      editorStore.getEditorState(key)!.zoomStep$.subscribe(() => {
-        console.log("zoom step changed");
-        this.updateZoomLevel();
-        this.updateBuffers();
+      editorStore.getEditorState(key)!.zoomStep$.subscribe((value) => {
+        if (this.hasZoomStepChangedOnce) {
+          console.log("zoom step changed", value);
+          this.updateZoomLevel();
+          this.updateBuffers();
+        } else {
+          this.hasZoomStepChangedOnce = true;
+        }
       }),
     );
   }
@@ -125,7 +130,7 @@ export class CircleNode<T> {
       zoomCenter[1] * zoomStep - currentOffset[1] * zoomStep,
     ];
 
-    console.log("视图的中心", zoomCenter);
+    // console.log("视图的中心", zoomCenter);
 
     // 计算新的 position，基于 zoom center
 

@@ -93,7 +93,7 @@ export class ControlPanel {
         editorState.canvas.clientHeight! * Math.random(),
       );
       const offset = editorState.offset$.getValue();
-      console.log(offset);
+      // console.log(offset);
       this.nodes$.next([
         ...this.nodes$.getValue(),
         {
