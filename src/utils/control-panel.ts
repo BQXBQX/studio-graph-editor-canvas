@@ -28,7 +28,7 @@ export class ControlPanel {
     statementText.style.fontFamily = "monospace";
     statementText.style.fontSize = "1rem";
     statementText.style.color = "black";
-    statementText.style.fontWeight = "bold"
+    statementText.style.fontWeight = "bold";
 
     this.controlPanelWrapper.appendChild(statementText);
 
@@ -75,13 +75,15 @@ export class ControlPanel {
     controlPanelContainer.style.zIndex = "100";
 
     const zoomOutButton = this.createButton("zoom-out.svg", () =>
-      this.smoothZoom(1.25)
+      this.smoothZoom(1.25),
     );
     const zoomInButton = this.createButton("zoom-in.svg", () =>
-      this.smoothZoom(0.8)
+      this.smoothZoom(0.8),
     );
     const addNodeButton = this.createButton("add-node.svg", null);
-    const clearCanvasButton = this.createButton("clear-canvas.svg", () => this.nodes$.next([]));
+    const clearCanvasButton = this.createButton("clear-canvas.svg", () =>
+      this.nodes$.next([]),
+    );
 
     controlPanelContainer.appendChild(zoomInButton);
     controlPanelContainer.appendChild(zoomOutButton);
@@ -105,7 +107,7 @@ export class ControlPanel {
 
   private createButton(
     icon: string,
-    callback: (() => void) | null
+    callback: (() => void) | null,
   ): HTMLButtonElement {
     const button = document.createElement("button");
     button.style.width = "2.5rem";

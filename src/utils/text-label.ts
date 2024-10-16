@@ -12,7 +12,7 @@ export class TextLabel {
     y: number,
     offsetX: number,
     offsetY: number,
-    key: string
+    key: string,
   ) {
     this.canvas = editorStore.getEditorState(key)?.canvas!;
 
@@ -67,7 +67,7 @@ export class TextLabel {
     x: number,
     y: number,
     offsetX: number,
-    offsetY: number
+    offsetY: number,
   ): void {
     this.element.style.left = `${x + offsetX}px`;
     this.element.style.top = `${y + offsetY}px`;

@@ -3,5 +3,5 @@ export interface Node<T> {
   data: T;
   backgroundColor?: [number, number, number, number];
   label: string;
-  key: string
+  key: string;
 }

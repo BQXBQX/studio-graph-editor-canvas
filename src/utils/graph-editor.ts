@@ -1,5 +1,5 @@
 import { CircleNode } from "./circle-node";
-import { BehaviorSubject, combineLatest, fromEvent } from "rxjs";
+import { BehaviorSubject, combineLatest, fromEvent, pairwise } from "rxjs";
 import createProgram from "./shader/create-program";
 import createShader from "./shader/create-shader";
 import fragment from "../glsl/fragment-shader-source.glsl?raw";
@@ -28,7 +28,7 @@ export class GraphEditor<NodeType> {
   constructor(
     container: HTMLCanvasElement,
     key: string,
-    defaultNodes?: Node<NodeType>[]
+    defaultNodes?: Node<NodeType>[],
   ) {
     editorStore.createState(key, container, defaultNodes ?? []);
     const currentEditorState = editorStore.getEditorState(key)!;
@@ -51,15 +51,25 @@ export class GraphEditor<NodeType> {
     // Set background color and other configurations
     this.gl.clearColor(245 / 255, 245 / 255, 245 / 255, 1);
 
-    // Add some circle nodes
-    currentEditorState.nodes$.subscribe((nodes) => {
-      this.nodes$.next(
-        (nodes ?? []).map(
-          (defaultNode) =>
-            new CircleNode<NodeType>(this.gl, defaultNode, this.key)
-        )
-      );
-    })
+    currentEditorState.nodes$.subscribe((currentNodes) => {
+      // console.log('上一次的值:', previousNodes)
+      console.log("当前的值:", currentNodes);
+
+      // 根据 previousNodes 和 currentNodes 的差异处理移除和新增的节点
+      if (currentNodes.length === 0) {
+        // 移除所有节点
+        this.nodes$.getValue().forEach((node) => node.dispose());
+        this.nodes$.next([]);
+      } else {
+        // 对当前的节点进行处理
+        this.nodes$.next(
+          currentNodes.map(
+            (defaultNode) =>
+              new CircleNode<NodeType>(this.gl, defaultNode, this.key),
+          ),
+        );
+      }
+    });
 
     // Initialize resize event handler using RxJS
     fromEvent(window, "resize").subscribe(() => this.resizeCanvas());
@@ -69,7 +79,7 @@ export class GraphEditor<NodeType> {
       this.canvasSize$,
       this.nodes$,
       this.canvasOffset$,
-      currentEditorState.zoomStep$
+      currentEditorState.zoomStep$,
     ]).subscribe(() => {
       this.drawScene();
     });
@@ -86,7 +96,7 @@ export class GraphEditor<NodeType> {
     const fragmentShader = createShader(
       this.gl,
       this.gl.FRAGMENT_SHADER,
-      fragment
+      fragment,
     );
 
     if (!vertexShader || !fragmentShader) {
@@ -115,7 +125,7 @@ export class GraphEditor<NodeType> {
     // Update resolution uniform for all nodes
     const resolutionLocation = this.gl.getUniformLocation(
       this.program,
-      "u_resolution"
+      "u_resolution",
     );
     this.gl.uniform2f(resolutionLocation, displayWidth, displayHeight);
 
@@ -126,7 +136,11 @@ export class GraphEditor<NodeType> {
   // private transformNodeToCir
   // Draw the scene by rendering all nodes
   private drawScene(): void {
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT | this.gl.STENCIL_BUFFER_BIT);
+    this.gl.clear(
+      this.gl.COLOR_BUFFER_BIT |
+        this.gl.DEPTH_BUFFER_BIT |
+        this.gl.STENCIL_BUFFER_BIT,
+    );
     // Get the current nodes and draw them
     const nodes = this.nodes$.getValue();
     for (const node of nodes) {
@@ -204,12 +218,12 @@ export class GraphEditor<NodeType> {
     });
 
     const dragCanvasThrottleHandler = new ThrottleHandler<MouseEvent>(
-      dragCanvas
+      dragCanvas,
     );
 
     // Mouse move event to update canvas position while dragging
     this.canvas.addEventListener("mousemove", (event) =>
-      dragCanvasThrottleHandler.handleEvent(event)
+      dragCanvasThrottleHandler.handleEvent(event),
     );
 
     // Mouse up event to stop dragging

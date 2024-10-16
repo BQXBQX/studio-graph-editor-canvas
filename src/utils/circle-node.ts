@@ -26,6 +26,7 @@ export class CircleNode<T> {
   public textLabel: TextLabel;
   public isDragging: boolean = false;
   private dragStartOffset: [number, number] = [0, 0];
+  public key: string;
   // private zoomCenter: [number, number] = [0, 0]; // 缩放中心点（鼠标位置）
 
   // private program: WebGLProgram;
@@ -36,11 +37,12 @@ export class CircleNode<T> {
     key: string,
     radius: number = 80,
     borderColor: [number, number, number, number] = [0, 0, 0, 1],
-    borderWidth: number = 6
+    borderWidth: number = 6,
   ) {
     this.gl = gl;
     this.graphEditorKey = key;
 
+    this.key = nodeProps.key;
 
     this.position$ = new BehaviorSubject<[number, number]>(nodeProps.position);
     this.offset$ = new BehaviorSubject<[number, number]>([0, 0]);
@@ -49,7 +51,7 @@ export class CircleNode<T> {
       [number, number, number, number]
     >(nodeProps.backgroundColor ?? [1, 1, 1, 1]);
     this.borderColor$ = new BehaviorSubject<[number, number, number, number]>(
-      borderColor
+      borderColor,
     );
     this.borderWidth$ = new BehaviorSubject<number>(borderWidth);
     this.data$ = new BehaviorSubject<T>(nodeProps.data);
@@ -60,7 +62,7 @@ export class CircleNode<T> {
       nodeProps.position[1],
       0,
       0,
-      key
+      key,
     );
 
     this.borderColor$.subscribe(() => {
@@ -75,9 +77,9 @@ export class CircleNode<T> {
           this.position$.getValue()[0],
           this.position$.getValue()[1],
           this.offset$.getValue()[0],
-          this.offset$.getValue()[1]
+          this.offset$.getValue()[1],
         );
-      }
+      },
     );
 
     // this.setScale();
@@ -88,7 +90,9 @@ export class CircleNode<T> {
   }
 
   private updateZoomLevel(): void {
-    const zoomStep = editorStore.getEditorState(this.graphEditorKey)!.zoomStep$.getValue();
+    const zoomStep = editorStore
+      .getEditorState(this.graphEditorKey)!
+      .zoomStep$.getValue();
     // 更新位置和偏移量
     const currentPosition = this.position$.getValue();
     this.position$.next([
@@ -141,7 +145,7 @@ export class CircleNode<T> {
     this.gl.bufferData(
       this.gl.ARRAY_BUFFER,
       new Float32Array(vertices),
-      this.gl.STATIC_DRAW
+      this.gl.STATIC_DRAW,
     );
 
     // Create and bind border buffer
@@ -150,8 +154,12 @@ export class CircleNode<T> {
     this.gl.bufferData(
       this.gl.ARRAY_BUFFER,
       new Float32Array(borderVertices),
-      this.gl.STATIC_DRAW
+      this.gl.STATIC_DRAW,
     );
+  }
+
+  public dispose(): void {
+    this.textLabel.remove();
   }
 
   public draw(program: WebGLProgram): void {
@@ -215,7 +223,7 @@ export class CircleNode<T> {
     const radius = this.radius$.getValue();
     const [offsetX, offsetY] = this.offset$.getValue();
     const distance = Math.sqrt(
-      (mouseX - nodeX - offsetX) ** 2 + (mouseY - nodeY - offsetY) ** 2
+      (mouseX - nodeX - offsetX) ** 2 + (mouseY - nodeY - offsetY) ** 2,
     );
     return distance <= radius;
   }

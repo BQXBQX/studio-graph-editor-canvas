@@ -37,29 +37,29 @@ export class TextTexture {
       this.gl.RGBA,
       this.gl.RGBA,
       this.gl.UNSIGNED_BYTE,
-      canvas
+      canvas,
     );
 
     // Set texture parameters
     this.gl.texParameteri(
       this.gl.TEXTURE_2D,
       this.gl.TEXTURE_WRAP_S,
-      this.gl.CLAMP_TO_EDGE
+      this.gl.CLAMP_TO_EDGE,
     );
     this.gl.texParameteri(
       this.gl.TEXTURE_2D,
       this.gl.TEXTURE_WRAP_T,
-      this.gl.CLAMP_TO_EDGE
+      this.gl.CLAMP_TO_EDGE,
     );
     this.gl.texParameteri(
       this.gl.TEXTURE_2D,
       this.gl.TEXTURE_MIN_FILTER,
-      this.gl.LINEAR
+      this.gl.LINEAR,
     );
     this.gl.texParameteri(
       this.gl.TEXTURE_2D,
       this.gl.TEXTURE_MAG_FILTER,
-      this.gl.LINEAR
+      this.gl.LINEAR,
     );
 
     return this.texture!;

@@ -8,38 +8,38 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
-interface NodeProps { }
+interface NodeProps {}
 
 const defaultNodes: Node<NodeProps>[] = [
   {
     position: [200, 300],
     data: {},
     label: "Ming Li",
-    key: "hello1"
+    key: "hello1",
   },
   {
     position: [800, 200],
     data: {},
     label: "Hong Li",
-    key: "hello2"
+    key: "hello2",
   },
   {
     position: [700, 400],
     data: {},
     label: "Hong Li",
-    key: "hello3"
+    key: "hello3",
   },
   {
     position: [500, 700],
     data: {},
     label: "Hong Li",
-    key: "hello4"
+    key: "hello4",
   },
   {
     position: [1100, 600],
     data: {},
     label: "Hong Li",
-    key: "hello6"
+    key: "hello6",
   },
 ];
 
