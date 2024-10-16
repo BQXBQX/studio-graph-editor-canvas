@@ -21,7 +21,6 @@ export class GraphEditor<NodeType> {
   private isDragging = false;
   private lastMousePosition: [number, number] = [0, 0];
   private canvasOffset$ = new BehaviorSubject<[number, number]>([0, 0]);
-  private controlPanel: ControlPanel;
   private key: string;
   // private scale$: BehaviorSubject<number>;
 
@@ -42,7 +41,7 @@ export class GraphEditor<NodeType> {
     if (!glContext) {
       throw new Error("WebGL2 is not supported");
     }
-    this.controlPanel = new ControlPanel(this.key);
+    new ControlPanel(this.key);
     this.gl = glContext;
 
     // Initialize shaders and program
@@ -52,23 +51,23 @@ export class GraphEditor<NodeType> {
     this.gl.clearColor(245 / 255, 245 / 255, 245 / 255, 1);
 
     currentEditorState.nodes$.subscribe((currentNodes) => {
-      // console.log('上一次的值:', previousNodes)
-      console.log("当前的值:", currentNodes);
+      // this.nodes$.getValue().forEach((node) => node.dispose());
+      const newAddNodes = currentNodes.filter(
+        (node) =>
+          !this.nodes$
+            .getValue()
+            .some((circleNode) => circleNode.key === node.key),
+      );
 
-      // 根据 previousNodes 和 currentNodes 的差异处理移除和新增的节点
-      if (currentNodes.length === 0) {
-        // 移除所有节点
-        this.nodes$.getValue().forEach((node) => node.dispose());
-        this.nodes$.next([]);
-      } else {
-        // 对当前的节点进行处理
-        this.nodes$.next(
-          currentNodes.map(
-            (defaultNode) =>
-              new CircleNode<NodeType>(this.gl, defaultNode, this.key),
-          ),
-        );
-      }
+      console.log("newAddNodes", newAddNodes);
+
+      this.nodes$.next([
+        ...this.nodes$.getValue(),
+        ...newAddNodes.map(
+          (defaultNode) =>
+            new CircleNode<NodeType>(this.gl, defaultNode, this.key),
+        ),
+      ]);
     });
 
     // Initialize resize event handler using RxJS

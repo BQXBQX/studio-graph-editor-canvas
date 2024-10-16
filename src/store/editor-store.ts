@@ -1,4 +1,4 @@
-import { BehaviorSubject, pairwise } from "rxjs";
+import { BehaviorSubject } from "rxjs";
 import { Node } from "../types/node";
 
 class EditorState<NodeType> {
@@ -42,7 +42,7 @@ class EditorStore {
   }
 
   public getEditorState(key: string): EditorState<any> | undefined {
-    return this.editorStates.find((ediorState) => ediorState.key === key);
+    return this.editorStates.find((editorState) => editorState.key === key);
   }
 }
 

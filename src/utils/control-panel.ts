@@ -1,6 +1,8 @@
 import { BehaviorSubject, fromEvent } from "rxjs";
 import editorStore from "../store/editor-store";
 import { Node } from "../types/node";
+import { v4 as uuidv4 } from "uuid";
+
 export class ControlPanel {
   private canvas: HTMLCanvasElement;
   private controlPanelWrapper: HTMLDivElement = document.createElement("div");
@@ -80,7 +82,14 @@ export class ControlPanel {
     const zoomInButton = this.createButton("zoom-in.svg", () =>
       this.smoothZoom(0.8),
     );
-    const addNodeButton = this.createButton("add-node.svg", null);
+    const addNodeButton = this.createButton("add-node.svg", () => {
+      const randomX = Math.floor(Math.random() * window.innerWidth);
+      const randomY = Math.floor(Math.random() * window.innerHeight);
+      this.nodes$.next([
+        ...this.nodes$.getValue(),
+        { key: uuidv4(), position: [randomX, randomY], data: {}, label: "" },
+      ]);
+    });
     const clearCanvasButton = this.createButton("clear-canvas.svg", () =>
       this.nodes$.next([]),
     );

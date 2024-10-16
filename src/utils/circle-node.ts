@@ -27,9 +27,6 @@ export class CircleNode<T> {
   public isDragging: boolean = false;
   private dragStartOffset: [number, number] = [0, 0];
   public key: string;
-  // private zoomCenter: [number, number] = [0, 0]; // 缩放中心点（鼠标位置）
-
-  // private program: WebGLProgram;
 
   constructor(
     gl: WebGL2RenderingContext,
@@ -66,7 +63,6 @@ export class CircleNode<T> {
     );
 
     this.borderColor$.subscribe(() => {
-      console.log(this.borderColor$.getValue());
       this.updateBuffers();
     });
 
@@ -93,7 +89,7 @@ export class CircleNode<T> {
     const zoomStep = editorStore
       .getEditorState(this.graphEditorKey)!
       .zoomStep$.getValue();
-    // 更新位置和偏移量
+
     const currentPosition = this.position$.getValue();
     this.position$.next([
       currentPosition[0] * zoomStep,
