@@ -42,7 +42,7 @@ export class CircleNode<T> {
     this.key = nodeProps.key;
 
     this.position$ = new BehaviorSubject<[number, number]>(nodeProps.position);
-    this.offset$ = new BehaviorSubject<[number, number]>([0, 0]);
+    this.offset$ = editorStore.getEditorState(key)!.offset$;
     this.radius$ = new BehaviorSubject<number>(radius);
     this.backgroundColor$ = new BehaviorSubject<
       [number, number, number, number]
@@ -78,7 +78,6 @@ export class CircleNode<T> {
       },
     );
 
-    // this.setScale();
     editorStore.getEditorState(key)!.zoomStep$.subscribe(() => {
       this.updateZoomLevel();
       this.updateBuffers();
@@ -189,9 +188,9 @@ export class CircleNode<T> {
     gl.drawArrays(gl.TRIANGLE_FAN, 0, this.numVertices);
   }
 
-  public setOffset(offsetX: number, offsetY: number): void {
-    this.offset$.next([offsetX, offsetY]);
-  }
+  // public setOffset(offsetX: number, offsetY: number): void {
+  //   this.offset$.next([offsetX, offsetY]);
+  // }
 
   public setPosition(x: number, y: number): void {
     this.position$.next([x, y]);

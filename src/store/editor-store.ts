@@ -8,17 +8,20 @@ class EditorState<NodeType> {
   public nodes$: BehaviorSubject<Node<NodeType>[]> = new BehaviorSubject<
     Node<NodeType>[]
   >([]);
+  public offset$: BehaviorSubject<[number, number]>;
 
   constructor(
     canvas: HTMLCanvasElement,
     key: string,
     initialNodes: Node<NodeType>[],
     initialZoomStep: number = 1,
+    initialOffset: [number, number] = [0, 0],
   ) {
     this.canvas = canvas;
     this.key = key;
     this.zoomStep$ = new BehaviorSubject<number>(initialZoomStep);
     this.nodes$.next(initialNodes);
+    this.offset$ = new BehaviorSubject<[number, number]>(initialOffset);
   }
 }
 

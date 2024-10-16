@@ -9,6 +9,7 @@ export class ControlPanel {
   private zoomStep$: BehaviorSubject<number>;
   private nodes$: BehaviorSubject<Node<any>[]>;
   private animationFrameId: number | null = null; // 用于存储上一次动画的 ID
+  private key: string;
 
   private speedFactor = 20; // 每次缩放分为 20 步完成
 
@@ -17,6 +18,7 @@ export class ControlPanel {
     this.canvas = currentEditorState.canvas;
     this.zoomStep$ = currentEditorState.zoomStep$;
     this.nodes$ = currentEditorState.nodes$;
+    this.key = key;
 
     this.controlPanelWrapper.style.position = "absolute";
     this.controlPanelWrapper.style.pointerEvents = "none";
@@ -85,9 +87,16 @@ export class ControlPanel {
     const addNodeButton = this.createButton("add-node.svg", () => {
       const randomX = Math.floor(Math.random() * window.innerWidth);
       const randomY = Math.floor(Math.random() * window.innerHeight);
+      const offset = editorStore.getEditorState(this.key)!.offset$.getValue();
+      console.log(offset);
       this.nodes$.next([
         ...this.nodes$.getValue(),
-        { key: uuidv4(), position: [randomX, randomY], data: {}, label: "" },
+        {
+          key: uuidv4(),
+          position: [randomX - offset[0], randomY - offset[1]],
+          data: {},
+          label: "",
+        },
       ]);
     });
     const clearCanvasButton = this.createButton("clear-canvas.svg", () =>

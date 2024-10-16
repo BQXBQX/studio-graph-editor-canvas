@@ -20,7 +20,7 @@ export class GraphEditor<NodeType> {
 
   private isDragging = false;
   private lastMousePosition: [number, number] = [0, 0];
-  private canvasOffset$ = new BehaviorSubject<[number, number]>([0, 0]);
+  private canvasOffset$: BehaviorSubject<[number, number]>;
   private key: string;
   // private scale$: BehaviorSubject<number>;
 
@@ -32,6 +32,7 @@ export class GraphEditor<NodeType> {
     editorStore.createState(key, container, defaultNodes ?? []);
     const currentEditorState = editorStore.getEditorState(key)!;
     this.canvas = currentEditorState.canvas;
+    this.canvasOffset$ = currentEditorState.offset$;
 
     this.key = key;
 
@@ -179,7 +180,7 @@ export class GraphEditor<NodeType> {
           const newOffsetY = this.canvasOffset$.getValue()[1] + deltaY;
 
           this.nodes$.getValue().forEach((node) => {
-            node.setOffset(newOffsetX, newOffsetY);
+            // node.setOffset(newOffsetX, newOffsetY);
           });
 
           this.canvasOffset$.next([newOffsetX, newOffsetY]);
