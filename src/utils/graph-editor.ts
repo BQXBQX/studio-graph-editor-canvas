@@ -50,29 +50,42 @@ export class GraphEditor<NodeType> {
 
     // Set background color and other configurations
     this.gl.clearColor(245 / 255, 245 / 255, 245 / 255, 1);
-
     currentEditorState.nodes$.subscribe((currentNodes) => {
-      // this.nodes$.getValue().forEach((node) => node.dispose());
-      const newAddNodes = currentNodes.filter(
-        (node) =>
-          !this.nodes$
-            .getValue()
-            .some((circleNode) => circleNode.key === node.key),
+      const existingNodes = this.nodes$.getValue();
+
+      // Find nodes that are no longer present in currentNodes
+      const removeNodes = existingNodes.filter(
+        (circleNode) =>
+          !currentNodes.some((node) => node.key === circleNode.key),
       );
 
-      this.nodes$.next([
-        ...this.nodes$.getValue(),
+      // Dispose removed nodes
+      removeNodes.forEach((node) => node.dispose());
+
+      // Filter the nodes that need to be added (new nodes not in existingNodes)
+      const newAddNodes = currentNodes.filter(
+        (node) =>
+          !existingNodes.some((circleNode) => circleNode.key === node.key),
+      );
+
+      // Create new CircleNodes for the new nodes and add them to the existing ones
+      const updatedNodes = [
+        ...existingNodes.filter((node) =>
+          currentNodes.some((newNode) => newNode.key === node.key),
+        ), // Keep only the nodes that are still in the currentNodes
         ...newAddNodes.map(
           (defaultNode) =>
             new CircleNode<NodeType>(
               this.gl,
               defaultNode,
               this.key,
-              // NOTE: Dynamically set the radius through global variables
-              editorStore.getEditorState(key)?.nodeRadius,
+              editorStore.getEditorState(this.key)?.nodeRadius,
             ),
         ),
-      ]);
+      ];
+
+      // Update the nodes$ with the updated list
+      this.nodes$.next(updatedNodes);
     });
 
     // Initialize resize event handler using RxJS
