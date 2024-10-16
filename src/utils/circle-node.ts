@@ -78,6 +78,13 @@ export class CircleNode<T> {
       },
     );
 
+    this.radius$.subscribe(() => {
+      console.log("radius changed", this.radius$.getValue());
+      editorStore
+        .getEditorState(this.graphEditorKey)
+        ?.setNodeRadius(this.radius$.getValue());
+    });
+
     editorStore.getEditorState(key)!.zoomStep$.subscribe(() => {
       this.updateZoomLevel();
       this.updateBuffers();

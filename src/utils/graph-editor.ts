@@ -60,13 +60,17 @@ export class GraphEditor<NodeType> {
             .some((circleNode) => circleNode.key === node.key),
       );
 
-      console.log("newAddNodes", newAddNodes);
-
       this.nodes$.next([
         ...this.nodes$.getValue(),
         ...newAddNodes.map(
           (defaultNode) =>
-            new CircleNode<NodeType>(this.gl, defaultNode, this.key),
+            new CircleNode<NodeType>(
+              this.gl,
+              defaultNode,
+              this.key,
+              // NOTE: Dynamically set the radius through global variables
+              editorStore.getEditorState(key)?.nodeRadius,
+            ),
         ),
       ]);
     });
@@ -178,10 +182,6 @@ export class GraphEditor<NodeType> {
 
           const newOffsetX = this.canvasOffset$.getValue()[0] + deltaX;
           const newOffsetY = this.canvasOffset$.getValue()[1] + deltaY;
-
-          this.nodes$.getValue().forEach((node) => {
-            // node.setOffset(newOffsetX, newOffsetY);
-          });
 
           this.canvasOffset$.next([newOffsetX, newOffsetY]);
 
