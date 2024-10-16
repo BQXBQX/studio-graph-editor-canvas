@@ -101,10 +101,16 @@ export class CircleNode<T> {
     const zoomStep = editorStore
       .getEditorState(this.graphEditorKey)!
       .zoomStep$.getValue();
-
     const currentPosition = this.position$.getValue();
     const currentOffset = this.offset$.getValue();
     const currentRadius = this.radius$.getValue();
+
+    zoomCenter = [
+      zoomCenter[0] * zoomStep - currentOffset[0] * zoomStep,
+      zoomCenter[1] * zoomStep - currentOffset[1] * zoomStep,
+    ];
+
+    console.log("视图的中心", zoomCenter);
 
     // 计算新的 position，基于 zoom center
 
