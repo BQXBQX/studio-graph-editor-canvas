@@ -168,15 +168,19 @@ export class GraphEditor<NodeType> {
 
   private addWheelHandlers(): void {
     this.canvas.addEventListener("wheel", (event: WheelEvent) => {
-      console.log(event);
       event.preventDefault();
-      const zoomStep = 1.1; // Adjust zoom step factor as needed
+      const zoomStep = 1.05; // Adjust zoom step factor as needed
       const delta = Math.sign(event.deltaY); // Get the direction of the scroll
       const zoomFactor = delta > 0 ? 1 / zoomStep : zoomStep; // Invert zoom factor for scroll down
 
       // Get the current zoom center (mouse position)
-      const mouseX = event.clientX;
-      const mouseY = event.clientY;
+      const mouseX = event.clientX - this.canvas.offsetLeft;
+      const mouseY = event.clientY - this.canvas.offsetTop;
+      console.log(mouseX, mouseY);
+      editorStore.getEditorState(this.key)?.zoomProps$.next({
+        zoomStep: zoomFactor,
+        centerPosition: [mouseX, mouseY],
+      });
     });
   }
 

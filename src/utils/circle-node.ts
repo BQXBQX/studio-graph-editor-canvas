@@ -100,9 +100,8 @@ export class CircleNode<T> {
     );
 
     this.subscriptions.push(
-      editorStore.getEditorState(key)!.zoomProps$.subscribe((value) => {
+      editorStore.getEditorState(key)!.zoomProps$.subscribe(() => {
         if (this.hasZoomStepChangedOnce) {
-          console.log("zoom step changed", value);
           this.updateZoomLevel();
           this.updateBuffers();
         } else {
@@ -117,28 +116,34 @@ export class CircleNode<T> {
       .getEditorState(this.graphEditorKey)!
       .zoomProps$.getValue();
     const zoomStep = zoomProps.zoomStep;
-    let zoomCenter = zoomProps.centerPosition ?? [
+
+    // 获取缩放中心，默认为 [200, 300]
+    const zoomCenter = zoomProps.centerPosition ?? [
       editorStore.getEditorState(this.graphEditorKey)?.canvas.clientWidth! / 2,
       editorStore.getEditorState(this.graphEditorKey)?.canvas.clientHeight! / 2,
     ];
+
     const currentPosition = this.position$.getValue();
     const currentOffset = this.offset$.getValue();
     const currentRadius = this.radius$.getValue();
 
-    zoomCenter = [
-      zoomCenter[0] * zoomStep - currentOffset[0] * zoomStep,
-      zoomCenter[1] * zoomStep - currentOffset[1] * zoomStep,
+    const newZoomCenter = [
+      zoomCenter[0] - currentOffset[0],
+      zoomCenter[1] - currentOffset[1],
     ];
 
     // 计算新的 position，基于 zoom center
+    const newX =
+      newZoomCenter[0] + (currentPosition[0] - newZoomCenter[0]) * zoomStep;
+    const newY =
+      newZoomCenter[1] + (currentPosition[1] - newZoomCenter[1]) * zoomStep;
 
-    this.position$.next([
-      zoomCenter[0] + (currentPosition[0] - zoomCenter[0]) * zoomStep,
-      zoomCenter[1] + (currentPosition[1] - zoomCenter[1]) * zoomStep,
-    ]);
+    this.position$.next([newX, newY]);
 
-    // 更新 offset 和 radius
+    // 更新 offset (保持与缩放因子不变）
     this.offset$.next([currentOffset[0], currentOffset[1]]);
+
+    // 更新 radius
     this.radius$.next(currentRadius * zoomStep);
   }
 
