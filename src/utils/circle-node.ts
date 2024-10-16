@@ -63,6 +63,7 @@ export class CircleNode<T> {
     );
 
     this.borderColor$.subscribe(() => {
+      console.log("border color changed", this.borderColor$.getValue());
       this.updateBuffers();
     });
 

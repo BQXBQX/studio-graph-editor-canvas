@@ -210,18 +210,27 @@ export class GraphEditor<NodeType> {
 
       let clickedNode: CircleNode<NodeType> | null = null;
 
-      this.nodes$.getValue().forEach((node) => {
-        node.setSelect(false);
-        if (node.isMouseOver(mouseX, mouseY)) {
-          clickedNode = node;
-          clickedNode.setSelect(true);
-        }
-      });
+      this.nodes$
+        .getValue()
+        .reverse()
+        .forEach((node) => {
+          node.setSelect(false);
+          if (node.isMouseOver(mouseX, mouseY) && !clickedNode) {
+            clickedNode = node;
+            clickedNode.setSelect(true);
+          }
+        });
 
+      //NOTE: Through array processing, the drag node is always placed on the top
+      if (clickedNode) {
+        const nodes = this.nodes$.getValue();
+        nodes.splice(nodes.indexOf(clickedNode), 1);
+        nodes.push(clickedNode);
+        this.nodes$.next(nodes);
+      }
       // TODO: Here we can optimize the number of data update
       this.drawScene();
 
-      console.log(clickedNode);
       if (clickedNode) {
         (clickedNode as CircleNode<NodeType>).startDragging(mouseX, mouseY);
       } else {
