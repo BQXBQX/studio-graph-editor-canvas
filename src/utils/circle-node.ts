@@ -1,4 +1,9 @@
-import { BehaviorSubject, combineLatest, Subscription } from "rxjs";
+import {
+  BehaviorSubject,
+  combineLatest,
+  distinctUntilChanged,
+  Subscription,
+} from "rxjs";
 import { Node } from "../types/node";
 import { TextLabel } from "./text-label";
 import editorStore from "../store/editor-store";
@@ -47,7 +52,6 @@ export class CircleNode<T> {
     this.position$ = new BehaviorSubject<[number, number]>(nodeProps.position);
     this.offset$ = editorStore.getEditorState(key)!.offset$;
     this.radius$ = new BehaviorSubject<number>(radius);
-    console.log("半径", radius);
     this.backgroundColor$ = new BehaviorSubject<
       [number, number, number, number]
     >(nodeProps.backgroundColor ?? [1, 1, 1, 1]);
@@ -76,8 +80,9 @@ export class CircleNode<T> {
 
     // Combine offset, position, and radius to update buffers and text label position
     this.subscriptions.push(
-      combineLatest([this.offset$, this.position$, this.radius$]).subscribe(
-        () => {
+      combineLatest([this.offset$, this.position$, this.radius$])
+        .pipe(distinctUntilChanged())
+        .subscribe(() => {
           this.updateBuffers();
           this.textLabel.setPosition(
             this.position$.getValue()[0],
@@ -85,14 +90,20 @@ export class CircleNode<T> {
             this.offset$.getValue()[0],
             this.offset$.getValue()[1],
           );
-        },
-      ),
+        }),
+    );
+
+    this.subscriptions.push(
+      this.position$.subscribe(() => {
+        // console.log("position changed", this.position$.getValue());
+        this.updateBuffers();
+      }),
     );
 
     // Subscribe to radius changes
     this.subscriptions.push(
       this.radius$.subscribe(() => {
-        console.log("radius changed", this.radius$.getValue());
+        // console.log("radius changed", this.radius$.getValue());
         editorStore
           .getEditorState(this.graphEditorKey)
           ?.setNodeRadius(this.radius$.getValue());
@@ -103,7 +114,6 @@ export class CircleNode<T> {
       editorStore.getEditorState(key)!.zoomProps$.subscribe(() => {
         if (this.hasZoomStepChangedOnce) {
           this.updateZoomLevel();
-          this.updateBuffers();
         } else {
           this.hasZoomStepChangedOnce = true;
         }
@@ -140,14 +150,12 @@ export class CircleNode<T> {
 
     this.position$.next([newX, newY]);
 
-    // 更新 offset (保持与缩放因子不变）
-    this.offset$.next([currentOffset[0], currentOffset[1]]);
-
     // 更新 radius
     this.radius$.next(currentRadius * zoomStep);
   }
 
-  private updateBuffers(): void {
+  public updateBuffers(): void {
+    console.log("数据更新");
     const numSegments = 100;
     const angleStep = (2 * Math.PI) / numSegments;
 
@@ -199,6 +207,7 @@ export class CircleNode<T> {
   }
 
   public draw(program: WebGLProgram): void {
+    console.log("drawing circle node");
     const gl = this.gl;
 
     gl.useProgram(program);

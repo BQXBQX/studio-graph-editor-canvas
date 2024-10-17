@@ -1,5 +1,10 @@
 import { CircleNode } from "./circle-node";
-import { BehaviorSubject, combineLatest, fromEvent } from "rxjs";
+import {
+  BehaviorSubject,
+  combineLatest,
+  distinctUntilChanged,
+  fromEvent,
+} from "rxjs";
 import createProgram from "./shader/create-program";
 import createShader from "./shader/create-shader";
 import fragment from "../glsl/fragment-shader-source.glsl?raw";
@@ -47,6 +52,8 @@ export class GraphEditor<NodeType> {
 
     // Initialize shaders and program
     this.program = this.initShaderProgram()!;
+
+    console.log("节点数量" + defaultNodes?.length);
 
     // Set background color and other configurations
     this.gl.clearColor(245 / 255, 245 / 255, 245 / 255, 1);
@@ -97,9 +104,11 @@ export class GraphEditor<NodeType> {
       this.nodes$,
       this.canvasOffset$,
       currentEditorState.zoomProps$,
-    ]).subscribe(() => {
-      this.drawScene();
-    });
+    ])
+      .pipe(distinctUntilChanged())
+      .subscribe(() => {
+        this.drawScene();
+      });
 
     this.addDragHandlers();
     this.addWheelHandlers();
