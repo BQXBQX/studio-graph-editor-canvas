@@ -53,8 +53,6 @@ export class GraphEditor<NodeType> {
     // Initialize shaders and program
     this.program = this.initShaderProgram()!;
 
-    console.log("节点数量" + defaultNodes?.length);
-
     // Set background color and other configurations
     this.gl.clearColor(245 / 255, 245 / 255, 245 / 255, 1);
     currentEditorState.nodes$.subscribe((currentNodes) => {
@@ -99,16 +97,16 @@ export class GraphEditor<NodeType> {
     fromEvent(window, "resize").subscribe(() => this.resizeCanvas());
 
     // Combine latest canvas size and nodes to trigger drawScene
-    combineLatest([
-      this.canvasSize$,
-      this.nodes$,
-      this.canvasOffset$,
-      currentEditorState.zoomProps$,
-    ])
+    combineLatest([this.canvasSize$, this.nodes$, this.canvasOffset$])
       .pipe(distinctUntilChanged())
       .subscribe(() => {
         this.drawScene();
       });
+
+    currentEditorState.zoomProps$.subscribe(() => {
+      this.nodes$.getValue().forEach((node) => node.updateZoomLevel());
+      this.drawScene();
+    });
 
     this.addDragHandlers();
     this.addWheelHandlers();
@@ -171,6 +169,7 @@ export class GraphEditor<NodeType> {
     // Get the current nodes and draw them
     const nodes = this.nodes$.getValue();
     for (const node of nodes) {
+      node.updateBuffers();
       node.draw(this.program);
     }
   }
@@ -185,7 +184,6 @@ export class GraphEditor<NodeType> {
       // Get the current zoom center (mouse position)
       const mouseX = event.clientX - this.canvas.offsetLeft;
       const mouseY = event.clientY - this.canvas.offsetTop;
-      console.log(mouseX, mouseY);
       editorStore.getEditorState(this.key)?.zoomProps$.next({
         zoomStep: zoomFactor,
         centerPosition: [mouseX, mouseY],

@@ -29,7 +29,6 @@ export class CircleNode<T> {
   private data$: BehaviorSubject<T>;
 
   private subscriptions: Subscription[] = []; // Subscription array to collect all subscriptions
-  private hasZoomStepChangedOnce: boolean = false; // Add this flag
 
   public textLabel: TextLabel;
   public isDragging: boolean = false;
@@ -83,7 +82,7 @@ export class CircleNode<T> {
       combineLatest([this.offset$, this.position$, this.radius$])
         .pipe(distinctUntilChanged())
         .subscribe(() => {
-          this.updateBuffers();
+          // console.log("position and radius changed");
           this.textLabel.setPosition(
             this.position$.getValue()[0],
             this.position$.getValue()[1],
@@ -93,13 +92,6 @@ export class CircleNode<T> {
         }),
     );
 
-    this.subscriptions.push(
-      this.position$.subscribe(() => {
-        // console.log("position changed", this.position$.getValue());
-        this.updateBuffers();
-      }),
-    );
-
     // Subscribe to radius changes
     this.subscriptions.push(
       this.radius$.subscribe(() => {
@@ -107,16 +99,6 @@ export class CircleNode<T> {
         editorStore
           .getEditorState(this.graphEditorKey)
           ?.setNodeRadius(this.radius$.getValue());
-      }),
-    );
-
-    this.subscriptions.push(
-      editorStore.getEditorState(key)!.zoomProps$.subscribe(() => {
-        if (this.hasZoomStepChangedOnce) {
-          this.updateZoomLevel();
-        } else {
-          this.hasZoomStepChangedOnce = true;
-        }
       }),
     );
   }
@@ -155,7 +137,6 @@ export class CircleNode<T> {
   }
 
   public updateBuffers(): void {
-    console.log("数据更新");
     const numSegments = 100;
     const angleStep = (2 * Math.PI) / numSegments;
 
@@ -167,6 +148,7 @@ export class CircleNode<T> {
 
     vertices.push(x + offsetX, y + offsetY);
 
+    // console.log("偏移", offsetX, offsetY);
     for (let i = 0; i <= numSegments; i++) {
       const angle = i * angleStep;
       const posX = Math.cos(angle) * this.radius$.getValue() + x + offsetX;
@@ -184,6 +166,8 @@ export class CircleNode<T> {
       const posY = Math.sin(angle) * borderRadius + y + offsetY;
       borderVertices.push(posX, posY);
     }
+
+    console.log("border vertices", x + offsetX, y + offsetY);
 
     this.numBorderVertices = numSegments + 2;
 
@@ -207,8 +191,8 @@ export class CircleNode<T> {
   }
 
   public draw(program: WebGLProgram): void {
-    console.log("drawing circle node");
     const gl = this.gl;
+    console.log("drawing circle node");
 
     gl.useProgram(program);
 
